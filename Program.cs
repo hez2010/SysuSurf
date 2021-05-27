@@ -1,17 +1,32 @@
 ﻿using System;
-using System.Text;
+using System.IO;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using SysuH3c.Eap;
-using static SysuH3c.Utils.AssertHelpers;
 
 namespace SysuH3c
 {
     class Program
     {
-        static void Main(string[] args)
+        public readonly static SemaphoreSlim Semaphore = new(0, 1);
+        static async Task Main(string[] args)
         {
-            var body = EapBody.CreateRequestBody(Encoding.UTF8.GetBytes("test"));
-            Assert(EapBody.GetBodyType(body.Span) == EapBodyType.Request);
-            Assert(Encoding.UTF8.GetString(EapBody.GetBodyData(body.Span)) == "test");
+            if (args.Length < 1)
+            {
+                Console.WriteLine("Usage: SysuH3c [config_file]");
+                return;
+            }
+
+            await using (var fileStream = new FileStream(args[0], FileMode.Open))
+            {
+                var config = await JsonSerializer.DeserializeAsync<EapOptions>(fileStream);
+                if (config is null) throw new InvalidDataException("Invalid Config.");
+                var auth = new EapAuth(config);
+                Console.CancelKeyPress += (_, _) => auth.LogOff();
+            }
+
+            await Semaphore.WaitAsync();
         }
     }
 }

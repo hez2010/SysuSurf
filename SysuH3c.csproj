@@ -4,6 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PacketDotNet" Version="1.2.0" />
+    <PackageReference Include="SharpPcap" Version="6.0.0" />
+  </ItemGroup>
 
 </Project>
