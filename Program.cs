@@ -21,12 +21,14 @@ namespace SysuH3C
 
             await using (var fileStream = new FileStream(args[0], FileMode.Open))
             {
-                var json = JsonDocument.Parse(fileStream);
+                var json = JsonDocument.Parse(fileStream,
+                    new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
                 if (json is null) throw new InvalidDataException("Invalid Config.");
+                
                 if (json.RootElement.TryGetProperty("UserName", out var userNameProperty) &&
                     json.RootElement.TryGetProperty("Password", out var passwordProperty) &&
                     json.RootElement.TryGetProperty("DeviceName", out var deviceNameProperty) &&
-                    (userNameProperty.ToString(), passwordProperty.ToString(), deviceNameProperty.ToString()) 
+                    (userNameProperty.ToString(), passwordProperty.ToString(), deviceNameProperty.ToString())
                         is (string userName, string password, string deviceName))
                 {
                     var config = new EapOptions(userName, password, deviceName);
