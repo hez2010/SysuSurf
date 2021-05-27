@@ -3,23 +3,41 @@ Cross-platform Implementation for SYSU H3C Authentication.
 
 ## Prerequsities
 - NpCap
-- .NET 6
 
-## Build
+## Quick Start
+```bash
+SysuH3C config.json
+```
+
+## Config Schema
+```json
+{
+    "UserName": "your netid",
+    "Password": "your password",
+    "DeviceName": "your ethernet inteface id"
+}
+```
+
+## Development Guide
+### Prerequsities
+- NpCap
+- .NET 6 SDK
+
+### Build
 ```bash
 dotnet build -c Release
 # Or build with Debug mode
 dotnet build
 ```
 
-## Run
+### Run
 ```bash
 dotnet run -c Release config.json
 # Or run with Debug mode
 dotnet run config.json
 ```
 
-## Publish
+### Publish
 ```bash
 dotnet publish -c Release -r win-x64
 dotnet publish -c Release -r osx-x64
