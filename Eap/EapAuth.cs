@@ -128,19 +128,18 @@ namespace SysuH3C.Eap
                                     Console.WriteLine("Got EAP Failure.");
                                     switch (state)
                                     {
-                                        case { Succeeded: true, FailureCount: <= 3 }:
-                                            SendIdResponse(state.LastId);
+                                        case { Succeeded: true, FailureCount: 0 }:
+                                            state.LastId--;
                                             state.FailureCount++;
+                                            SendIdResponse(state.LastId);
                                             break;
                                         case { Succeeded: true, FailureCount: < 10 }:
                                             if (state.FailureCount % 2 == 0) state.LastId++;
-                                            SendIdResponse(state.LastId);
                                             state.FailureCount++;
+                                            SendIdResponse(state.LastId);
                                             break;
                                         default:
-                                            state.FailureCount = 0;
-                                            state.Succeeded = false;
-                                            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, state, false);
+                                            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
                                             return;
                                     }
                                 }

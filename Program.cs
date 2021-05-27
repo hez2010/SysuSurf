@@ -23,11 +23,20 @@ namespace SysuH3C
             {
                 var json = JsonDocument.Parse(fileStream);
                 if (json is null) throw new InvalidDataException("Invalid Config.");
-                var (userName, password, deviceName) = (json.RootElement.GetProperty("UserName").GetString(), json.RootElement.GetProperty("Password").GetString(), json.RootElement.GetProperty("DeviceName").GetString());
-                if (userName is null || password is null || deviceName is null) throw new InvalidDataException("Invalid Config.");
-                var config = new EapOptions(userName, password, deviceName);
-                var auth = new EapAuth(config);
-                Console.CancelKeyPress += (_, _) => auth.LogOff();
+                if (json.RootElement.TryGetProperty("UserName", out var userNameProperty) &&
+                    json.RootElement.TryGetProperty("Password", out var passwordProperty) &&
+                    json.RootElement.TryGetProperty("DeviceName", out var deviceNameProperty) &&
+                    (userNameProperty.ToString(), passwordProperty.ToString(), deviceNameProperty.ToString()) 
+                        is (string userName, string password, string deviceName))
+                {
+                    var config = new EapOptions(userName, password, deviceName);
+                    var auth = new EapAuth(config);
+                    Console.CancelKeyPress += (_, _) => auth.LogOff();
+                }
+                else
+                {
+                    throw new InvalidDataException("Invalid Config.");
+                }
             }
 
             await Semaphore.WaitAsync();
