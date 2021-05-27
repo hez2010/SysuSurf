@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using SharpPcap;
+using SharpPcap.LibPcap;
 using SysuH3C.Utils;
 using static SysuH3C.Utils.AssertHelpers;
 
@@ -19,7 +20,7 @@ namespace SysuH3C.Eap
         private readonly ReadOnlyMemory<byte> userName;
         private readonly ReadOnlyMemory<byte> password;
         private readonly ReadOnlyMemory<byte> paddedPassword;
-        private readonly ILiveDevice device;
+        private readonly LibPcapLiveDevice device;
         private readonly EapOptions options;
         private bool disposed = false;
         private bool hasLogOff = false;
@@ -28,7 +29,7 @@ namespace SysuH3C.Eap
         {
             this.options = options;
 
-            var devices = CaptureDeviceList.Instance;
+            var devices = LibPcapLiveDeviceList.Instance;
             var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
             if (device is null)
             {
@@ -36,13 +37,15 @@ namespace SysuH3C.Eap
             }
 
             ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), paeGroupAddr, 0x888e);
-            device.Open(DeviceModes.None);
-            this.device = device;
 
+            device.Open();
+            device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
+
+            this.device = device;
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
             paddedPassword = password.ToArray().Concat(Enumerable.Repeat<byte>(0, 16 - password.Length)).ToArray();
-            
+
             ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
         }
 
