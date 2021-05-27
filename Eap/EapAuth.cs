@@ -124,6 +124,7 @@ namespace SysuH3c.Eap
                                 else
                                 {
                                     Console.WriteLine("Got EAP Failure.");
+                                    Thread.Sleep(3000);
                                     ThreadPool.UnsafeQueueUserWorkItem(EapWorker, (object?)null, false);
                                 }
                                 return;
