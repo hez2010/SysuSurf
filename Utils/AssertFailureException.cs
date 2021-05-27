@@ -1,6 +1,6 @@
 using System;
 
-namespace SysuH3c.Utils
+namespace SysuH3C.Utils
 {
     public class AssertFailureException : Exception
     {

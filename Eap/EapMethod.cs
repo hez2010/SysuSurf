@@ -1,4 +1,4 @@
-namespace SysuH3c.Eap
+namespace SysuH3C.Eap
 {
     public enum EapMethod : byte
     {

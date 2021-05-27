@@ -3,9 +3,9 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using SysuH3c.Eap;
+using SysuH3C.Eap;
 
-namespace SysuH3c
+namespace SysuH3C
 {
     class Program
     {

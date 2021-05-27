@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using SharpPcap;
-using SysuH3c.Utils;
+using SysuH3C.Utils;
 
-namespace SysuH3c.Eap
+namespace SysuH3C.Eap
 {
     public sealed class EapAuth : IDisposable
     {
