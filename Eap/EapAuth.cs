@@ -39,7 +39,7 @@ namespace SysuH3C.Eap
 
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
-            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, (object?)null, false);
+            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
         }
 
         ~EapAuth()
@@ -96,7 +96,7 @@ namespace SysuH3C.Eap
             hasLogOff = true;
         }
 
-        private void EapWorker(object? state)
+        private void EapWorker(EapWorkerState state)
         {
             SendStartRequest();
             while (true)
@@ -113,6 +113,7 @@ namespace SysuH3C.Eap
                         switch (code)
                         {
                             case EapCode.Success:
+                                state.Succeeded = true;
                                 Console.WriteLine("Got EAP Success.");
                                 break;
                             case EapCode.Failure:
@@ -120,14 +121,30 @@ namespace SysuH3C.Eap
                                 {
                                     Console.WriteLine("Log Off Succeeded.");
                                     Program.Semaphore.Release();
+                                    return;
                                 }
                                 else
                                 {
                                     Console.WriteLine("Got EAP Failure.");
-                                    Thread.Sleep(3000);
-                                    ThreadPool.UnsafeQueueUserWorkItem(EapWorker, (object?)null, false);
+                                    switch (state)
+                                    {
+                                        case { Succeeded: true, FailureCount: <= 3 }:
+                                            SendIdResponse(state.LastId);
+                                            state.FailureCount++;
+                                            break;
+                                        case { Succeeded: true, FailureCount: < 10 }:
+                                            if (state.FailureCount % 2 == 0) state.LastId++;
+                                            SendIdResponse(state.LastId);
+                                            state.FailureCount++;
+                                            break;
+                                        default:
+                                            state.FailureCount = 0;
+                                            state.Succeeded = false;
+                                            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, state, false);
+                                            return;
+                                    }
                                 }
-                                return;
+                                break;
                             case EapCode.Request:
                                 if (buffer.Length < 8) break;
 
@@ -147,6 +164,7 @@ namespace SysuH3C.Eap
                                 {
                                     case EapMethod.Identity:
                                         Console.WriteLine("Got EAP Request for Identity.");
+                                        state.LastId = id;
                                         SendIdResponse(id);
                                         break;
                                     case EapMethod.SysuH3c:
@@ -168,6 +186,11 @@ namespace SysuH3C.Eap
                                 break;
                             default:
                                 break;
+                        }
+
+                        if (code != EapCode.Failure)
+                        {
+                            state.FailureCount = 0;
                         }
                     }
                 }
