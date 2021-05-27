@@ -38,10 +38,10 @@ namespace SysuH3C.Eap
 
             ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), paeGroupAddr, 0x888e);
 
-            device.Open();
+            device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
             device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
-
             this.device = device;
+
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
             paddedPassword = password.ToArray().Concat(Enumerable.Repeat<byte>(0, 16 - password.Length)).ToArray();
