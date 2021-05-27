@@ -139,6 +139,7 @@ namespace SysuH3C.Eap
                                             SendIdResponse(state.LastId);
                                             break;
                                         default:
+                                            Thread.Sleep(5000);
                                             ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
                                             return;
                                     }
