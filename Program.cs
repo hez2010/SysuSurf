@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Node;
 using System.Threading;
 using System.Threading.Tasks;
 using SysuH3C.Eap;
@@ -20,8 +21,11 @@ namespace SysuH3C
 
             await using (var fileStream = new FileStream(args[0], FileMode.Open))
             {
-                var config = await JsonSerializer.DeserializeAsync<EapOptions>(fileStream);
-                if (config is null) throw new InvalidDataException("Invalid Config.");
+                var json = JsonDocument.Parse(fileStream);
+                if (json is null) throw new InvalidDataException("Invalid Config.");
+                var (userName, password, deviceName) = (json.RootElement.GetProperty("UserName").GetString(), json.RootElement.GetProperty("Password").GetString(), json.RootElement.GetProperty("DeviceName").GetString());
+                if (userName is null || password is null || deviceName is null) throw new InvalidDataException("Invalid Config.");
+                var config = new EapOptions(userName, password, deviceName);
                 var auth = new EapAuth(config);
                 Console.CancelKeyPress += (_, _) => auth.LogOff();
             }

@@ -21,8 +21,6 @@ dotnet run config.json
 
 ## Publish
 ```bash
-dotnet publish -c Release
-# Or publish with specified runtime-id
 dotnet publish -c Release -r win-x64
 dotnet publish -c Release -r osx-x64
 dotnet publish -c Release -r linux-x64
