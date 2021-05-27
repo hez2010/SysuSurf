@@ -164,7 +164,7 @@ namespace SysuH3C.Eap
                                 }
                                 break;
                             case EapCode.LoginMessage when id == 5 && buffer.Length >= 12:
-                                Console.WriteLine(Encoding.Default.GetString(buffer[12..]));
+                                Console.WriteLine("Got Message: " + Encoding.Default.GetString(buffer[12..]));
                                 break;
                             default:
                                 break;
