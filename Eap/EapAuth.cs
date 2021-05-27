@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using SharpPcap;
 using SysuH3C.Utils;
+using static SysuH3C.Utils.AssertHelpers;
 
 namespace SysuH3C.Eap
 {
@@ -17,6 +18,7 @@ namespace SysuH3C.Eap
         private readonly ReadOnlyMemory<byte> ethernetHeader;
         private readonly ReadOnlyMemory<byte> userName;
         private readonly ReadOnlyMemory<byte> password;
+        private readonly ReadOnlyMemory<byte> paddedPassword;
         private readonly ILiveDevice device;
         private readonly EapOptions options;
         private bool disposed = false;
@@ -39,6 +41,8 @@ namespace SysuH3C.Eap
 
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
+            paddedPassword = password.ToArray().Concat(Enumerable.Repeat<byte>(0, 16 - password.Length)).ToArray();
+            
             ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
         }
 
@@ -76,9 +80,23 @@ namespace SysuH3C.Eap
 
         private void SendMd5Response(byte id, ReadOnlyMemory<byte> md5Data)
         {
+            Assert(md5Data.Length == 16);
             Console.WriteLine("Send MD5-Challenge Response.");
-            var data = new ReadOnlyMemory<byte>(new[] { id }).Concat(password).Concat(md5Data);
-            var digest = MD5.HashData(data.ToArray());
+            byte[] digest;
+
+            if (options.Md5Method == EapMd5AuthMethod.Xor)
+            {
+                digest = new byte[16];
+                for (var i = 0; i < 16; i++)
+                {
+                    digest[i] = (byte)(paddedPassword.Span[i] ^ md5Data.Span[i]);
+                }
+            }
+            else
+            {
+                var data = new ReadOnlyMemory<byte>(new[] { id }).Concat(password).Concat(md5Data);
+                digest = MD5.HashData(data.ToArray());
+            }
             var response = new ReadOnlyMemory<byte>(new[] { (byte)digest.Length }).Concat(digest).Concat(userName);
             SendResponse(id, EapMethod.Md5, response);
         }

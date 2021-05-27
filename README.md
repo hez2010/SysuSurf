@@ -14,7 +14,8 @@ SysuH3C config.json
 {
     "UserName": "your netid",
     "Password": "your password",
-    "DeviceName": "your ethernet inteface id"
+    "DeviceName": "your ethernet inteface id",
+    "Md5Method": 0 // 0: xor, 1: md5
 }
 ```
 
