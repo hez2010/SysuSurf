@@ -30,7 +30,7 @@ namespace SysuH3C.Eap
             var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
             if (device is null)
             {
-                throw new FileNotFoundException($"Network device '{options.DeviceName}' doesn't exist. \nAvailable interfaces: \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}");
+                throw new FileNotFoundException($"Network device '{options.DeviceName}' doesn't exist. \nAvailable interfaces: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}");
             }
 
             ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), paeGroupAddr, 0x888e);
