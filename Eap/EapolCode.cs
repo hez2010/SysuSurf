@@ -1,4 +1,4 @@
-namespace SysuH3C.Eap
+namespace SysuSurf.Eap
 {
     public enum EapolCode : byte
     {

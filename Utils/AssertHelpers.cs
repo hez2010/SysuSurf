@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace SysuH3C.Utils
+namespace SysuSurf.Utils
 {
 
     public static class AssertHelpers

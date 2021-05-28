@@ -1,21 +1,24 @@
-# SysuH3C
-Cross-platform Implementation for SYSU H3C Authentication.
+# SysuSurf
+Cross-platform Implementation for SYSU H3C and Ruijie Authentication.
 
 ## Prerequsities
 - NpCap
 
 ## Quick Start
 ```bash
-SysuH3C config.json
+SysuSurf config.json
 ```
 
 ## Config Schema
-```json
+```json5
 {
+    "Type": 0, // 0: H3C, 1: Ruijie
     "UserName": "your netid",
     "Password": "your password",
     "DeviceName": "your ethernet inteface id",
-    "Md5Method": 0 // 0: xor, 1: md5
+    "Md5Method": 0, // H3C optional. 0: xor, 1: md5
+    "GroupcastMode": 0, // Ruijie optional. 0: Standard, 1: Ruijie Private, 2: Saier
+    "DhcpMode": 0, // Ruijie optional. 0: None, 1: Second Auth, 2: After Auth, 3: Before Auth
 }
 ```
 

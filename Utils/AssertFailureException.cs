@@ -1,6 +1,6 @@
 using System;
 
-namespace SysuH3C.Utils
+namespace SysuSurf.Utils
 {
     public class AssertFailureException : Exception
     {

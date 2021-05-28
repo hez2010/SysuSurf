@@ -1,53 +1,87 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Node;
 using System.Threading;
 using System.Threading.Tasks;
-using SysuH3C.Eap;
+using SysuSurf.Eap;
+using SysuSurf.Options;
 
-namespace SysuH3C
+namespace SysuSurf
 {
     class Program
     {
         public readonly static SemaphoreSlim Semaphore = new(0, 1);
+
+        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) where TOption : struct
+        {
+            if (element.TryGetProperty(propertyName, out var property) &&
+                property.TryGetInt32(out var value) &&
+                validate(value))
+            {
+                return (TOption)(object)value;
+            }
+
+            return default;
+        }
+
+        static async ValueTask<SurfOptions> LoadOptions(string fileName)
+        {
+            await using var fileStream = new FileStream(fileName, FileMode.Open);
+
+            var json = JsonDocument.Parse(fileStream,
+                new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            if (json is null) throw new InvalidDataException("Invalid options.");
+
+            if (!(json.RootElement.TryGetProperty("Type", out var typeProperty) && typeProperty.TryGetInt32(out var type)))
+            {
+                throw new InvalidDataException("Invalid options [missing type].");
+            }
+
+            if (json.RootElement.TryGetProperty("UserName", out var userNameProperty) &&
+                json.RootElement.TryGetProperty("Password", out var passwordProperty) &&
+                json.RootElement.TryGetProperty("DeviceName", out var deviceNameProperty) &&
+                (userNameProperty.ToString(), passwordProperty.ToString(), deviceNameProperty.ToString())
+                    is (string userName, string password, string deviceName))
+            {
+
+                return type switch
+                {
+                    0 => new H3COptions(
+                            userName,
+                            password,
+                            deviceName,
+                            LoadOptionalOption<H3CMd5ChallengeMethod>(json.RootElement, "Md5Method", i => i is 0 or 1)),
+                    1 => new RuijieOptions(
+                            userName,
+                            password,
+                            deviceName,
+                            LoadOptionalOption<RuijieGroupcastMode>(json.RootElement, "GroupcastMode", i => i is >= 0 and < 3),
+                            LoadOptionalOption<RuijieDhcpMode>(json.RootElement, "DhcpMode", i => i is >= 0 and < 4)),
+                    _ => throw new NotSupportedException("Not supported authentication type.")
+                };
+            }
+            else
+            {
+                throw new InvalidDataException("Invalid options [missing fields].");
+            }
+        }
+
         static async Task Main(string[] args)
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("Usage: SysuH3c [config_file]");
+                Console.WriteLine("Usage: SysuSurf [options_file]");
                 return;
             }
 
-            await using (var fileStream = new FileStream(args[0], FileMode.Open))
+            EapAuth auth = await LoadOptions(args[0]) switch
             {
-                var json = JsonDocument.Parse(fileStream,
-                    new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
-                if (json is null) throw new InvalidDataException("Invalid Config.");
+                H3COptions options => new H3CEapAuth(options),
+                RuijieOptions options => new RuijieEapAuth(options),
+                _ => throw new NotSupportedException("Not supported options.")
+            };
 
-                if (json.RootElement.TryGetProperty("UserName", out var userNameProperty) &&
-                    json.RootElement.TryGetProperty("Password", out var passwordProperty) &&
-                    json.RootElement.TryGetProperty("DeviceName", out var deviceNameProperty) &&
-                    (userNameProperty.ToString(), passwordProperty.ToString(), deviceNameProperty.ToString())
-                        is (string userName, string password, string deviceName))
-                {
-                    var options = new EapOptions(userName, password, deviceName);
-
-                    if (json.RootElement.TryGetProperty("Md5Method", out var md5MethodProp) &&
-                        md5MethodProp.TryGetInt32(out var md5Method) &&
-                        md5Method is 0 or 1)
-                    {
-                        options = options with { Md5Method = (EapMd5AuthMethod)md5Method };
-                    }
-
-                    var auth = new EapAuth(options);
-                    Console.CancelKeyPress += (_, _) => auth.LogOff();
-                }
-                else
-                {
-                    throw new InvalidDataException("Invalid Config.");
-                }
-            }
+            Console.CancelKeyPress += (_, _) => auth.LogOff();
 
             await Semaphore.WaitAsync();
         }

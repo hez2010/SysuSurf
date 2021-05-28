@@ -1,9 +1,9 @@
 using System;
 using System.Buffers.Binary;
 using System.Linq;
-using SysuH3C.Eap;
+using SysuSurf.Eap;
 
-namespace SysuH3C.Utils
+namespace SysuSurf.Utils
 {
     public static class PacketHelpers
     {
