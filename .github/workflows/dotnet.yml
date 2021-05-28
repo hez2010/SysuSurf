@@ -36,7 +36,8 @@ jobs:
     - name: Publish Windows x64 Release
       run: |
         dotnet publish -c Release -r win-x64 -o WindowsBuildx64
-        del WindowsBuildx64\*.pdb WindowsBuildx64\*.json
+        del WindowsBuildx64\*.pdb
+        del WindowsBuildx64\*.json
     - name: Upload Windows x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
