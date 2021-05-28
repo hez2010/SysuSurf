@@ -2,7 +2,7 @@
 Cross-platform Implementation for SYSU H3C and Ruijie Authentication.
 
 ## Prerequsities
-- NpCap
+- pcap (libpcap, NPcap, WinPcap and etc.)
 
 ## Quick Start
 ```bash
@@ -24,7 +24,7 @@ SysuSurf config.json
 
 ## Development Guide
 ### Prerequsities
-- NpCap
+- pcap (libpcap, NPcap, WinPcap and etc.)
 - .NET 6 SDK
 
 ### Build
