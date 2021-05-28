@@ -1,3 +1,6 @@
+// Licensed to hez2010 under one or more agreements.
+// hez2010 licenses this file to you under the MIT license.
+
 using System;
 using System.Buffers.Binary;
 using System.IO;
@@ -77,7 +80,7 @@ namespace SysuSurf.Eap
         private void SendH3cResponse(byte id)
         {
             Console.WriteLine("Send H3C Response.");
-            SendResponse(id, EapMethod.SysuH3c, new ReadOnlyMemory<byte>(new byte[] { (byte)password.Length }).Concat(password).Concat(userName));
+            SendResponse(id, EapMethod.SysuH3C, new ReadOnlyMemory<byte>(new byte[] { (byte)password.Length }).Concat(password).Concat(userName));
         }
 
         private void SendMd5Response(byte id, ReadOnlyMemory<byte> md5Data)
@@ -186,7 +189,7 @@ namespace SysuSurf.Eap
                                         state.LastId = id;
                                         SendIdResponse(id);
                                         break;
-                                    case EapMethod.SysuH3c:
+                                    case EapMethod.SysuH3C:
                                         Console.WriteLine("Got EAP Request for H3C.");
                                         SendH3cResponse(id);
                                         break;
