@@ -22,6 +22,7 @@ namespace SysuH3C.Eap
         private readonly ReadOnlyMemory<byte> paddedPassword;
         private readonly LibPcapLiveDevice device;
         private readonly EapOptions options;
+        private DateTime lastRequest;
         private bool disposed = false;
         private bool hasLogOff = false;
 
@@ -149,20 +150,11 @@ namespace SysuH3C.Eap
                                     Console.WriteLine("Got EAP Failure.");
                                     switch (state)
                                     {
-                                        case { Succeeded: false, FailureCount: < 2 }:
+                                        case { Succeeded: false, FailureCount: < 3 }:
                                             state.FailureCount++;
                                             SendStartRequest();
                                             break;
-                                        case { Succeeded: false }:
-                                            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
-                                            break;
-                                        case { Succeeded: true, FailureCount: 0 }:
-                                            state.LastId--;
-                                            state.FailureCount++;
-                                            SendIdResponse(state.LastId);
-                                            break;
-                                        case { Succeeded: true, FailureCount: < 10 }:
-                                            if (state.FailureCount % 2 == 0) state.LastId++;
+                                        case { Succeeded: true, FailureCount: < 3 }:
                                             state.FailureCount++;
                                             SendIdResponse(state.LastId);
                                             break;
@@ -208,6 +200,8 @@ namespace SysuH3C.Eap
                                     default:
                                         break;
                                 }
+
+                                lastRequest = DateTime.Now;
                                 break;
                             case EapCode.LoginMessage when id == 5 && buffer.Length >= 12:
                                 Console.WriteLine("Got Message: " + Encoding.Default.GetString(buffer[12..]));
@@ -221,6 +215,12 @@ namespace SysuH3C.Eap
                             state.FailureCount = 0;
                         }
                     }
+                }
+
+                if (DateTime.Now - lastRequest > TimeSpan.FromMinutes(1))
+                {
+                    ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
+                    return;
                 }
             }
         }
