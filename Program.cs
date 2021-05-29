@@ -71,6 +71,7 @@ namespace SysuSurf
         static IHostBuilder CreateHostBuilder(string[] args, SurfOptions options) =>
             Host.CreateDefaultBuilder(args)
                 .UseWindowsService()
+                .UseSystemd()
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(options);
