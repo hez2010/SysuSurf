@@ -3,7 +3,6 @@
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
     <TrimMode>Link</TrimMode>
-    <IlcDisableReflection>true</IlcDisableReflection>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
   </PropertyGroup>
