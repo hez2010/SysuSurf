@@ -127,8 +127,8 @@ namespace SysuSurf.Eap
             cancellationToken.ThrowIfCancellationRequested();
             
             logger.LogInformation("Send EAPOL LogOff Request.");
-            device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.LogOff)).Span);
             hasLogOff = true;
+            device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.LogOff)).Span);
             return Task.CompletedTask;
         }
 
