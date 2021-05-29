@@ -5,8 +5,12 @@
     <TrimMode>Link</TrimMode>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <!-- <IlcDisableReflection>true</IlcDisableReflection> -->
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-*" />
+    <!-- <AppContextSwitchOverrides Include="Switch.System.Reflection.Disabled.DoNotThrowForNames" />
+    <AppContextSwitchOverrides Include="Switch.System.Reflection.Disabled.DoNotThrowForAssembly" />
+    <AppContextSwitchOverrides Include="Switch.System.Reflection.Disabled.DoNotThrowForAttributes" /> -->
   </ItemGroup>
 </Project>
