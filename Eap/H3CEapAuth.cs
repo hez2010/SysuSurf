@@ -8,6 +8,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using SysuSurf.Options;
@@ -16,7 +19,7 @@ using static SysuSurf.Utils.AssertHelpers;
 
 namespace SysuSurf.Eap
 {
-    public sealed class H3CEapAuth : EapAuth<H3COptions>
+    public sealed class H3CEapAuth : EapAuth<H3CEapAuth, H3COptions>
     {
         private readonly static ReadOnlyMemory<byte> paeGroupAddr = new byte[] { 0x01, 0x80, 0xc2, 0x00, 0x00, 0x03 };
         private readonly static ReadOnlyMemory<byte> versionInfo = new byte[] { 0x06, 0x07, }.Concat(Encoding.ASCII.GetBytes("bjQ7SE8BZ3MqHhs3clMregcDY3Y=")).Concat(new byte[] { 0x20, 0x20 }).ToArray();
@@ -29,7 +32,7 @@ namespace SysuSurf.Eap
         private bool disposed = false;
         private bool hasLogOff = false;
 
-        public H3CEapAuth(SurfOptions options) : base(options)
+        public H3CEapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<H3CEapAuth> logger) : base(options, lifetime, logger)
         {
             var devices = LibPcapLiveDeviceList.Instance;
             var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
@@ -39,16 +42,11 @@ namespace SysuSurf.Eap
             }
 
             ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), paeGroupAddr, 0x888e);
-
-            device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
-            device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
             this.device = device;
 
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
             paddedPassword = password.ToArray().Concat(Enumerable.Repeat<byte>(0, 16 - password.Length)).ToArray();
-
-            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
         }
 
         ~H3CEapAuth()
@@ -66,6 +64,17 @@ namespace SysuSurf.Eap
             }
         }
 
+        public override Task StartAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
+            device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
+            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
+
+            return Task.CompletedTask;
+        }
+
         private void SendResponse(byte id, EapMethod type, ReadOnlyMemory<byte> data = default)
         {
             device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.Packet, PacketHelpers.GetEapPacket(EapCode.Response, id, type, data))).Span);
@@ -73,20 +82,20 @@ namespace SysuSurf.Eap
 
         private void SendIdResponse(byte id)
         {
-            Console.WriteLine("Send Id Response.");
+            logger.LogInformation("Send Id Response.");
             SendResponse(id, EapMethod.Identity, versionInfo.Concat(userName));
         }
 
         private void SendH3cResponse(byte id)
         {
-            Console.WriteLine("Send H3C Response.");
+            logger.LogInformation("Send H3C Response.");
             SendResponse(id, EapMethod.SysuH3C, new ReadOnlyMemory<byte>(new byte[] { (byte)password.Length }).Concat(password).Concat(userName));
         }
 
         private void SendMd5Response(byte id, ReadOnlyMemory<byte> md5Data)
         {
             Assert(md5Data.Length == 16);
-            Console.WriteLine("Send MD5-Challenge Response.");
+            logger.LogInformation("Send MD5-Challenge Response.");
             byte[] digest;
 
             if (options.Md5Method == H3CMd5ChallengeMethod.Xor)
@@ -108,23 +117,26 @@ namespace SysuSurf.Eap
 
         private void SendStartRequest()
         {
-            Console.WriteLine("Send EAPOL Start Request.");
+            logger.LogInformation("Send EAPOL Start Request.");
             lastRequest = DateTime.Now;
             device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.Start)).Span);
         }
 
-        public override void LogOff()
+        public override Task StopAsync(CancellationToken cancellationToken)
         {
-            Console.WriteLine("Send EAPOL LogOff Request.");
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            logger.LogInformation("Send EAPOL LogOff Request.");
             device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.LogOff)).Span);
             hasLogOff = true;
+            return Task.CompletedTask;
         }
 
         private void EapWorker(EapWorkerState state)
         {
             SendStartRequest();
             while (true)
-            {
+            {;
                 if (device.GetNextPacket(out var packet) == GetPacketStatus.PacketRead)
                 {
                     var buffer = packet.Data.ToArray().AsSpan();
@@ -138,18 +150,18 @@ namespace SysuSurf.Eap
                         {
                             case EapCode.Success:
                                 state.Succeeded = true;
-                                Console.WriteLine("Got EAP Success.");
+                                logger.LogInformation("Got EAP Success.");
                                 break;
                             case EapCode.Failure:
                                 if (hasLogOff)
                                 {
-                                    Console.WriteLine("Log Off Succeeded.");
-                                    Program.Semaphore.Release();
+                                    logger.LogInformation("Log Off Succeeded.");
+                                    lifetime.StopAsync(default);
                                     return;
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Got EAP Failure.");
+                                    logger.LogInformation("Got EAP Failure.");
                                     switch (state)
                                     {
                                         case { Succeeded: false, FailureCount: < 3 }:
@@ -185,16 +197,16 @@ namespace SysuSurf.Eap
                                 switch (reqType)
                                 {
                                     case EapMethod.Identity:
-                                        Console.WriteLine("Got EAP Request for Identity.");
+                                        logger.LogInformation("Got EAP Request for Identity.");
                                         state.LastId = id;
                                         SendIdResponse(id);
                                         break;
                                     case EapMethod.SysuH3C:
-                                        Console.WriteLine("Got EAP Request for H3C.");
+                                        logger.LogInformation("Got EAP Request for H3C.");
                                         SendH3cResponse(id);
                                         break;
                                     case EapMethod.Md5:
-                                        Console.WriteLine("Got EAP Request for MD5-Challenge.");
+                                        logger.LogInformation("Got EAP Request for MD5-Challenge.");
                                         var dataLen = data[0];
                                         var md5Data = data[1..Math.Min(data.Length, 1 + dataLen)];
                                         SendMd5Response(id, md5Data);
@@ -206,7 +218,7 @@ namespace SysuSurf.Eap
                                 lastRequest = DateTime.Now;
                                 break;
                             case EapCode.LoginMessage when id == 5 && buffer.Length >= 12:
-                                Console.WriteLine("Got Message: " + Encoding.Default.GetString(buffer[12..]));
+                                logger.LogInformation("Got Message: " + Encoding.Default.GetString(buffer[12..]));
                                 break;
                             default:
                                 break;

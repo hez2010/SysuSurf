@@ -6,6 +6,8 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SysuSurf.Eap;
 using SysuSurf.Options;
 
@@ -13,8 +15,6 @@ namespace SysuSurf
 {
     class Program
     {
-        public readonly static SemaphoreSlim Semaphore = new(0, 1);
-
         static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) where TOption : struct
         {
             if (element.TryGetProperty(propertyName, out var property) &&
@@ -69,6 +69,25 @@ namespace SysuSurf
             }
         }
 
+        static IHostBuilder CreateHostBuilder(string fileName, SurfOptions options) =>
+            Host.CreateDefaultBuilder()
+#if WINDOWS
+                .UseWindowsService()
+#endif
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton(options);
+
+                    if (options is H3COptions)
+                    {
+                        services.AddHostedService<H3CEapAuth>();
+                    }
+                    else
+                    {
+                        services.AddHostedService<RuijieEapAuth>();
+                    }
+                });
+
         static async Task Main(string[] args)
         {
             if (args.Length < 1)
@@ -77,16 +96,9 @@ namespace SysuSurf
                 return;
             }
 
-            EapAuth auth = await LoadOptions(args[0]) switch
-            {
-                H3COptions options => new H3CEapAuth(options),
-                RuijieOptions options => new RuijieEapAuth(options),
-                _ => throw new NotSupportedException("Not supported options.")
-            };
+            var options = await LoadOptions(args[0]);
 
-            Console.CancelKeyPress += (_, _) => auth.LogOff();
-
-            await Semaphore.WaitAsync();
+            await CreateHostBuilder(args[0], options).Build().RunAsync();
         }
     }
 }
