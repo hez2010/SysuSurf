@@ -68,11 +68,9 @@ namespace SysuSurf
             }
         }
 
-        static IHostBuilder CreateHostBuilder(string fileName, SurfOptions options) =>
-            Host.CreateDefaultBuilder()
-#if WINDOWS
+        static IHostBuilder CreateHostBuilder(string[] args, SurfOptions options) =>
+            Host.CreateDefaultBuilder(args)
                 .UseWindowsService()
-#endif
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(options);
@@ -91,13 +89,13 @@ namespace SysuSurf
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("Usage: SysuSurf [options_file]");
+                Console.WriteLine("Usage: SysuSurf [options_file] [...args]");
                 return;
             }
 
             var options = await LoadOptions(args[0]);
 
-            await CreateHostBuilder(args[0], options).Build().RunAsync();
+            await CreateHostBuilder(args[1..], options).Build().RunAsync();
         }
     }
 }
