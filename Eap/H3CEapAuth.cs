@@ -42,7 +42,7 @@ namespace SysuSurf.Eap
 
             device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
             device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
-            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
+            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState { CancellationToken = cancellationTokenSource.Token }, false);
 
             return Task.CompletedTask;
         }
@@ -101,14 +101,15 @@ namespace SysuSurf.Eap
             logger.LogInformation("Send EAPOL LogOff Request.");
             hasLogOff = true;
             device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.LogOff)).Span);
+            cancellationTokenSource.Cancel();
             return Task.CompletedTask;
         }
 
         private void EapWorker(EapWorkerState state)
         {
             SendStartRequest();
-            while (true)
-            {;
+            while (!state.CancellationToken.IsCancellationRequested)
+            {
                 if (device.GetNextPacket(out var packet) == GetPacketStatus.PacketRead)
                 {
                     var buffer = packet.Data.ToArray().AsSpan();

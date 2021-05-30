@@ -28,6 +28,7 @@ namespace SysuSurf
         protected readonly ILogger<TAuth> logger;
         protected readonly ILiveDevice device;
         protected bool disposed = false;
+        protected readonly CancellationTokenSource cancellationTokenSource;
 
         public EapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<TAuth> logger)
         {
@@ -48,6 +49,7 @@ namespace SysuSurf
             }
 
             this.device = device;
+            cancellationTokenSource = new();
         }
 
         ~EapAuth()
@@ -60,6 +62,7 @@ namespace SysuSurf
             if (!disposed)
             {
                 disposed = true;
+                cancellationTokenSource.Dispose();
                 device.Dispose();
                 GC.SuppressFinalize(this);
             }
