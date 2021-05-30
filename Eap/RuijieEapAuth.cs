@@ -12,25 +12,9 @@ namespace SysuSurf.Eap
 {
     public sealed class RuijieEapAuth : EapAuth<RuijieEapAuth, RuijieOptions>
     {
-        private bool disposed = false;
-
         public RuijieEapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<RuijieEapAuth> logger) : base(options, lifetime, logger)
         {
             throw new NotImplementedException("Ruijie authentication is not yet implemented.");
-        }
-
-        ~RuijieEapAuth()
-        {
-            Dispose();
-        }
-
-        public override void Dispose()
-        {
-            if (!disposed)
-            {
-                disposed = true;
-                GC.SuppressFinalize(this);
-            }
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)

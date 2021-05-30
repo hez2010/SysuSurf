@@ -2,10 +2,14 @@
 // hez2010 licenses this file to you under the MIT license.
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SharpPcap;
+using SharpPcap.LibPcap;
 using SysuSurf.Options;
 
 namespace SysuSurf
@@ -22,6 +26,8 @@ namespace SysuSurf
         protected readonly TOptions options;
         protected readonly IHostLifetime lifetime;
         protected readonly ILogger<TAuth> logger;
+        protected readonly ILiveDevice device;
+        protected bool disposed = false;
 
         public EapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<TAuth> logger)
         {
@@ -33,6 +39,30 @@ namespace SysuSurf
             this.options = tOptions;
             this.lifetime = lifetime;
             this.logger = logger;
+            
+            var devices = LibPcapLiveDeviceList.Instance;
+            var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
+            if (device is null)
+            {
+                throw new FileNotFoundException($"Network device '{options.DeviceName}' doesn't exist. \nAvailable interfaces: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}");
+            }
+
+            this.device = device;
+        }
+
+        ~EapAuth()
+        {
+            Dispose();
+        }
+
+        public override void Dispose()
+        {
+            if (!disposed)
+            {
+                disposed = true;
+                device.Dispose();
+                GC.SuppressFinalize(this);
+            }
         }
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Buffers.Binary;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,7 +11,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SharpPcap;
-using SharpPcap.LibPcap;
 using SysuSurf.Options;
 using SysuSurf.Utils;
 using static SysuSurf.Utils.AssertHelpers;
@@ -27,41 +25,15 @@ namespace SysuSurf.Eap
         private readonly ReadOnlyMemory<byte> userName;
         private readonly ReadOnlyMemory<byte> password;
         private readonly ReadOnlyMemory<byte> paddedPassword;
-        private readonly LibPcapLiveDevice device;
         private DateTime lastRequest;
-        private bool disposed = false;
         private bool hasLogOff = false;
 
         public H3CEapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<H3CEapAuth> logger) : base(options, lifetime, logger)
         {
-            var devices = LibPcapLiveDeviceList.Instance;
-            var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
-            if (device is null)
-            {
-                throw new FileNotFoundException($"Network device '{options.DeviceName}' doesn't exist. \nAvailable interfaces: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}");
-            }
-
             ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), paeGroupAddr, 0x888e);
-            this.device = device;
-
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
             paddedPassword = password.ToArray().Concat(Enumerable.Repeat<byte>(0, 16 - password.Length)).ToArray();
-        }
-
-        ~H3CEapAuth()
-        {
-            Dispose();
-        }
-
-        public override void Dispose()
-        {
-            if (!disposed)
-            {
-                disposed = true;
-                device.Dispose();
-                GC.SuppressFinalize(this);
-            }
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
