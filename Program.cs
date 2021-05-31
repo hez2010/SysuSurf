@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SysuSurf.Eap;
 using SysuSurf.Options;
+using static SysuSurf.Utils.AssertHelpers;
 
 namespace SysuSurf
 {
@@ -21,6 +22,7 @@ namespace SysuSurf
                 property.TryGetInt32(out var value) &&
                 validate(value))
             {
+                Assert(Unsafe.SizeOf<TOption>() == sizeof(int));
                 return Unsafe.As<int, TOption>(ref value);
             }
 
