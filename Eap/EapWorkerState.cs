@@ -7,6 +7,7 @@ namespace SysuSurf.Eap
 {
     public class EapWorkerState
     {
+        public EapWorkerState(CancellationToken cancellationToken) => CancellationToken = cancellationToken;
         public int FailureCount { get; set; }
         public bool Succeeded { get; set; }
         public byte LastId { get; set; }

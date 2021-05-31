@@ -42,7 +42,7 @@ namespace SysuSurf.Eap
 
             device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
             device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
-            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState { CancellationToken = cancellationTokenSource.Token }, false);
+            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(cancellationTokenSource.Token), false);
 
             return Task.CompletedTask;
         }
@@ -147,7 +147,7 @@ namespace SysuSurf.Eap
                                             break;
                                         default:
                                             Thread.Sleep(5000);
-                                            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
+                                            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(state.CancellationToken), false);
                                             return;
                                     }
                                 }
@@ -206,7 +206,7 @@ namespace SysuSurf.Eap
 
                 if (DateTime.Now - lastRequest > TimeSpan.FromMinutes(1))
                 {
-                    ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(), false);
+                    ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(state.CancellationToken), false);
                     return;
                 }
             }
