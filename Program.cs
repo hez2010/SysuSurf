@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,13 +15,13 @@ namespace SysuSurf
 {
     class Program
     {
-        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) where TOption : struct
+        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) where TOption : struct, Enum
         {
             if (element.TryGetProperty(propertyName, out var property) &&
                 property.TryGetInt32(out var value) &&
                 validate(value))
             {
-                return (TOption)(object)value;
+                return Unsafe.As<int, TOption>(ref value);
             }
 
             return default;
