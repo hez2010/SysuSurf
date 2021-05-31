@@ -134,7 +134,7 @@ namespace SysuSurf.Eap
                                 }
                                 else
                                 {
-                                    logger.LogInformation("Got EAP Failure.");
+                                    logger.LogWarning("Got EAP Failure.");
                                     switch (state)
                                     {
                                         case { Succeeded: false, FailureCount: < 3 }:
