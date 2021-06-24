@@ -1,16 +1,13 @@
 <Project>
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(NativeBuild)'=='true'">
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
-    <TrimMode>Link</TrimMode>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-    <!-- <IlcDisableReflection>true</IlcDisableReflection> -->
+    <IlcDisableReflection>true</IlcDisableReflection>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(NativeBuild)'=='true'">
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-*" />
-    <!-- <AppContextSwitchOverrides Include="Switch.System.Reflection.Disabled.DoNotThrowForNames" />
-    <AppContextSwitchOverrides Include="Switch.System.Reflection.Disabled.DoNotThrowForAssembly" />
-    <AppContextSwitchOverrides Include="Switch.System.Reflection.Disabled.DoNotThrowForAttributes" /> -->
+    <IlcArg Include="--reflectedonly" />
   </ItemGroup>
 </Project>

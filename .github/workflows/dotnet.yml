@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 env:
-  DOTNET_SDK_VERSION: '6.0.100-preview.4.21255.9'
+  DOTNET_SDK_VERSION: '6.0.100-preview.5.21302.13'
 
 jobs:
   build:
@@ -44,6 +44,17 @@ jobs:
       with:
         name: Windows_x64
         path: WindowsBuildx64
+    - name: Publish Windows Arm64 Release
+      run: |
+        dotnet publish -c Release -r win-arm64 -o WindowsBuildArm64
+        del WindowsBuildArm64\*.pdb
+        del WindowsBuildArm64\*.json
+        copy config.json WindowsBuildArm64\config.json
+    - name: Upload Windows Arm64 artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Windows_Arm64
+        path: WindowsBuildArm64
 
   publish-linux:
     runs-on: ubuntu-latest
@@ -71,6 +82,39 @@ jobs:
       with:
         name: Linux_x64
         path: LinuxBuildx64
+    - name: Publish Linux Arm64 Release
+      run: |
+        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64
+        rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
+        strip LinuxBuildArm64/SysuSurf
+        cp config.json LinuxBuildArm64/config.json
+    - name: Upload Linux Arm64 artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Linux_Arm64
+        path: LinuxBuildArm64
+    - name: Publish Linux musl x64 Release
+      run: |
+        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
+        rm LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
+        strip LinuxBuildMuslx64/SysuSurf
+        cp config.json LinuxBuildMuslx64/config.json
+    - name: Upload Linux musl x64 artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Linux_Musl_x64
+        path: LinuxBuildMuslx64
+    - name: Publish Linux musl Arm64 Release
+      run: |
+        dotnet publish -c Release -r linux-musl-arm64 -o LinuxBuildMuslArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
+        rm LinuxBuildMuslArm64/*.pdb LinuxBuildMuslArm64/*.json
+        strip LinuxBuildMuslArm64/SysuSurf
+        cp config.json LinuxBuildMuslArm64/config.json
+    - name: Upload Linux musl Arm64 artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Linux_Musl_Arm64
+        path: LinuxBuildMuslArm64
         
   publish-macos:
     runs-on: macos-latest

@@ -16,7 +16,8 @@ namespace SysuSurf
 {
     class Program
     {
-        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) where TOption : struct, Enum
+        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) 
+            where TOption : struct, Enum
         {
             if (element.TryGetProperty(propertyName, out var property) &&
                 property.TryGetInt32(out var value) &&
