@@ -70,7 +70,7 @@ jobs:
     - name: Install Kerberos 5 library
       run: |
         sudo apt update
-        sudo apt install -y libkrb5-dev libstdc++-10-dev-arm64-cross
+        sudo apt install -y libkrb5-dev
     - name: Publish Linux x64 Release
       run: |
         dotnet publish -c Release -r linux-x64 -o LinuxBuildx64
@@ -84,7 +84,7 @@ jobs:
         path: LinuxBuildx64
     - name: Publish Linux Arm64 Release
       run: |
-        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:CrossCompileLinuxArm64=true
+        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
         rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
         strip LinuxBuildArm64/SysuSurf
         cp config.json LinuxBuildArm64/config.json
