@@ -74,7 +74,7 @@ jobs:
     - name: Publish Linux x64 Release
       run: |
         dotnet publish -c Release -r linux-x64 -o LinuxBuildx64
-        rm LinuxBuildx64/*.pdb LinuxBuildx64/*.json
+        -rm LinuxBuildx64/*.pdb LinuxBuildx64/*.json
         strip LinuxBuildx64/SysuSurf
         cp config.json LinuxBuildx64/config.json
     - name: Upload Linux x64 artifact
@@ -85,7 +85,7 @@ jobs:
     - name: Publish Linux Arm64 Release
       run: |
         dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
-        rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
+        -rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
         strip LinuxBuildArm64/SysuSurf
         cp config.json LinuxBuildArm64/config.json
     - name: Upload Linux Arm64 artifact
@@ -96,7 +96,7 @@ jobs:
     - name: Publish Linux musl x64 Release
       run: |
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
-        rm LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
+        -rm LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
         strip LinuxBuildMuslx64/SysuSurf
         cp config.json LinuxBuildMuslx64/config.json
     - name: Upload Linux musl x64 artifact
@@ -107,7 +107,7 @@ jobs:
     - name: Publish Linux musl Arm64 Release
       run: |
         dotnet publish -c Release -r linux-musl-arm64 -o LinuxBuildMuslArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
-        rm LinuxBuildMuslArm64/*.pdb LinuxBuildMuslArm64/*.json
+        -rm LinuxBuildMuslArm64/*.pdb LinuxBuildMuslArm64/*.json
         strip LinuxBuildMuslArm64/SysuSurf
         cp config.json LinuxBuildMuslArm64/config.json
     - name: Upload Linux musl Arm64 artifact
@@ -130,7 +130,7 @@ jobs:
     - name: Publish macOS x64 Release
       run: |
         dotnet publish -c Release -r osx-x64 -o macOSBuildx64
-        rm macOSBuildx64/*.pdb macOSBuildx64/*.json
+        -rm macOSBuildx64/*.pdb macOSBuildx64/*.json
         strip macOSBuildx64/SysuSurf
         cp config.json macOSBuildx64/config.json
     - name: Upload macOS x64 artifact
