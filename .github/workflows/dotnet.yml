@@ -46,7 +46,7 @@ jobs:
         path: WindowsBuildx64
     - name: Publish Windows Arm64 Release
       run: |
-        dotnet publish -c Release -r win-arm64 -o WindowsBuildArm64
+        dotnet publish -c Release -r win-arm64 -o WindowsBuildArm64 /p:CrossCompileWindowsArm64=true
         del WindowsBuildArm64\*.pdb
         del WindowsBuildArm64\*.json
         copy config.json WindowsBuildArm64\config.json
@@ -84,7 +84,7 @@ jobs:
         path: LinuxBuildx64
     - name: Publish Linux Arm64 Release
       run: |
-        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64
+        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:CrossCompileLinuxArm64=true
         rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
         strip LinuxBuildArm64/SysuSurf
         cp config.json LinuxBuildArm64/config.json

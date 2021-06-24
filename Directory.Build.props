@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(NativeBuild)'=='true'">
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="6.0.0-*" />
+    <PackageReference Condition="'$(CrossCompileWindowsArm64)'=='true'" Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="6.0.0-*" />
+    <PackageReference Condition="'$(CrossCompileLinuxArm64)'=='true'" Include="runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="6.0.0-*" />
     <IlcArg Include="--reflectedonly" />
   </ItemGroup>
 </Project>
