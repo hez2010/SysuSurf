@@ -70,7 +70,7 @@ jobs:
     - name: Install Kerberos 5 library
       run: |
         sudo apt update
-        sudo apt install -y libkrb5-dev
+        sudo apt install -y libkrb5-dev libstdc++-10-dev-arm64-cross
     - name: Publish Linux x64 Release
       run: |
         dotnet publish -c Release -r linux-x64 -o LinuxBuildx64
