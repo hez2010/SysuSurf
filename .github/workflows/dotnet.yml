@@ -86,7 +86,6 @@ jobs:
       run: |
         dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
         rm -f LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
-        strip LinuxBuildArm64/SysuSurf
         cp config.json LinuxBuildArm64/config.json
     - name: Upload Linux Arm64 artifact
       uses: actions/upload-artifact@v1.0.0
@@ -97,7 +96,6 @@ jobs:
       run: |
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
         rm -f LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
-        strip LinuxBuildMuslx64/SysuSurf
         cp config.json LinuxBuildMuslx64/config.json
     - name: Upload Linux musl x64 artifact
       uses: actions/upload-artifact@v1.0.0
@@ -108,7 +106,6 @@ jobs:
       run: |
         dotnet publish -c Release -r linux-musl-arm64 -o LinuxBuildMuslArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
         rm -f LinuxBuildMuslArm64/*.pdb LinuxBuildMuslArm64/*.json
-        strip LinuxBuildMuslArm64/SysuSurf
         cp config.json LinuxBuildMuslArm64/config.json
     - name: Upload Linux musl Arm64 artifact
       uses: actions/upload-artifact@v1.0.0
