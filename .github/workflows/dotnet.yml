@@ -103,6 +103,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Publish Linux Musl x64 Release
       run: |
+        apk --no-cache add clang clang-dev musl-dev git gcc
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
         strip LinuxBuildMuslx64/SysuSurf
