@@ -82,13 +82,13 @@ jobs:
       with:
         name: Linux_x64
         path: LinuxBuildx64
-    - name: Publish Native Linux Musl x64 Release
+    - name: Publish Linux Musl x64 Release
       run: |
         sudo apt install -y musl
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb
-        aarch64-linux-gnu-strip LinuxBuildMuslx64/TypedocConverter
-    - name: Upload Linux Musl x64 native artifact
+        strip LinuxBuildMuslx64/SysuSurf
+    - name: Upload Linux Musl x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         name: Linux_Muslx64
