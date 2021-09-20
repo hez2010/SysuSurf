@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 env:
-  DOTNET_SDK_VERSION: '6.0.100-rc.2.21470.1'
+  DOTNET_SDK_VERSION: '6.0.0-rc.1.21451.13'
 
 jobs:
   build:
