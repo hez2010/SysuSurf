@@ -102,16 +102,14 @@ jobs:
     steps:
     - name: Publish Linux Musl x64 Release
       run: |
-        pwd && ls --recursive
-        cd /__w/SysuSurf/SysuSurf
-        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
+        dotnet publish SysuSurf.csproj -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb
         strip LinuxBuildMuslx64/SysuSurf
     - name: Upload Linux Musl x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         name: Linux_Muslx64
-        path: /__w/SysuSurf/SysuSurf/LinuxBuildMuslx64
+        path: LinuxBuildMuslx64
 
   publish-linux-arm64:
     runs-on: ubuntu-latest
