@@ -120,7 +120,7 @@ jobs:
       run: |
         dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-9 /p:SysRoot=/crossrootfs/arm64
         rm LinuxBuildArm64/*.pdb
-        aarch64-linux-gnu-strip LinuxBuildArm64/TypedocConverter
+        aarch64-linux-gnu-strip LinuxBuildArm64/SysuSurf
     - name: Upload Linux ARM64 native artifact
       uses: actions/upload-artifact@v1.0.0
       with:
