@@ -108,9 +108,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container: mcr.microsoft.com/dotnet/sdk:6.0-alpine
-    
+
     steps:
-    - name: Publish Linux ARM64 Release
+    - name: Publish Linux Musl x64 Release
       run: |
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb
