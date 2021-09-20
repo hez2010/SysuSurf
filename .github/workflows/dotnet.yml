@@ -102,6 +102,7 @@ jobs:
     steps:
     - name: Publish Linux Musl x64 Release
       run: |
+        pwd && ls --recursive
         cd /__w/SysuSurf/SysuSurf
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb
