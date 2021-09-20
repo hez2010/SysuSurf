@@ -100,9 +100,14 @@ jobs:
       image: mcr.microsoft.com/dotnet/sdk:6.0-alpine
 
     steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+        include-prerelease: true
     - name: Publish Linux Musl x64 Release
       run: |
-        ls -R
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
         strip LinuxBuildMuslx64/SysuSurf
