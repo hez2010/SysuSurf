@@ -96,11 +96,15 @@ jobs:
   publish-linux-musl-x64:
     runs-on: ubuntu-latest
     needs: build
-    container: mcr.microsoft.com/dotnet/sdk:6.0-alpine
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:6.0-alpine
+      volumes:
+      - /SysuSurf:/src
 
     steps:
     - name: Publish Linux Musl x64 Release
       run: |
+        cd /src
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb
         strip LinuxBuildMuslx64/SysuSurf
