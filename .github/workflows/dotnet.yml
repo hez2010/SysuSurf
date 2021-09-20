@@ -98,13 +98,11 @@ jobs:
     needs: build
     container:
       image: mcr.microsoft.com/dotnet/sdk:6.0-alpine
-      volumes:
-      - /SysuSurf:/src
 
     steps:
     - name: Publish Linux Musl x64 Release
       run: |
-        cd /src
+        cd /__w/SysuSurf/SysuSurf
         dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
         rm LinuxBuildMuslx64/*.pdb
         strip LinuxBuildMuslx64/SysuSurf
@@ -112,7 +110,7 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         name: Linux_Muslx64
-        path: LinuxBuildMuslx64
+        path: /__w/SysuSurf/SysuSurf/LinuxBuildMuslx64
 
   publish-linux-arm64:
     runs-on: ubuntu-latest
