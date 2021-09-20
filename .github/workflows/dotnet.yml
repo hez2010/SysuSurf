@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 env:
-  DOTNET_SDK_VERSION: '6.0.100-preview.5.21302.13'
+  DOTNET_SDK_VERSION: '6.0.100-rc.2.21470.1'
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
         include-prerelease: true
     - name: Publish Windows x64 Release
       run: |
-        dotnet publish -c Release -r win-x64 -o WindowsBuildx64
+        dotnet publish -c Release -r win-x64 -o WindowsBuildx64 /p:NativeBuild=true
         del WindowsBuildx64\*.pdb
         del WindowsBuildx64\*.json
         copy config.json WindowsBuildx64\config.json
@@ -46,7 +46,7 @@ jobs:
         path: WindowsBuildx64
     - name: Publish Windows Arm64 Release
       run: |
-        dotnet publish -c Release -r win-arm64 -o WindowsBuildArm64 /p:CrossCompileWindowsArm64=true
+        dotnet publish -c Release -r win-arm64 -o WindowsBuildArm64 /p:NativeBuild=true /p:CrossCompileWindowsArm64=true
         del WindowsBuildArm64\*.pdb
         del WindowsBuildArm64\*.json
         copy config.json WindowsBuildArm64\config.json
@@ -56,7 +56,7 @@ jobs:
         name: Windows_Arm64
         path: WindowsBuildArm64
 
-  publish-linux:
+  publish-other-linux:
     runs-on: ubuntu-latest
     needs: build
 
@@ -73,7 +73,7 @@ jobs:
         sudo apt install -y libkrb5-dev
     - name: Publish Linux x64 Release
       run: |
-        dotnet publish -c Release -r linux-x64 -o LinuxBuildx64
+        dotnet publish -c Release -r linux-x64 -o LinuxBuildx64 /p:NativeBuild=true
         rm -f LinuxBuildx64/*.pdb LinuxBuildx64/*.json
         strip LinuxBuildx64/SysuSurf
         cp config.json LinuxBuildx64/config.json
@@ -82,25 +82,16 @@ jobs:
       with:
         name: Linux_x64
         path: LinuxBuildx64
-    - name: Publish Linux Arm64 Release
+    - name: Publish Native Linux Musl x64 Release
       run: |
-        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
-        rm -f LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
-        cp config.json LinuxBuildArm64/config.json
-    - name: Upload Linux Arm64 artifact
+        sudo apt install -y musl
+        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
+        rm LinuxBuildMuslx64/*.pdb
+        aarch64-linux-gnu-strip LinuxBuildMuslx64/TypedocConverter
+    - name: Upload Linux Musl x64 native artifact
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Linux_Arm64
-        path: LinuxBuildArm64
-    - name: Publish Linux musl x64 Release
-      run: |
-        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
-        rm -f LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
-        cp config.json LinuxBuildMuslx64/config.json
-    - name: Upload Linux musl x64 artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: Linux_Musl_x64
+        name: Linux_Muslx64
         path: LinuxBuildMuslx64
     - name: Publish Linux musl Arm64 Release
       run: |
@@ -113,6 +104,29 @@ jobs:
         name: Linux_Musl_Arm64
         path: LinuxBuildMuslArm64
         
+  publish-linux-arm64:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-16.04-cross-arm64-20201022204150-b2c2436
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+        include-prerelease: true
+    - name: Publish Native Linux ARM64 Release
+      run: |
+        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-9 /p:SysRoot=/crossrootfs/arm64
+        rm LinuxBuildArm64/*.pdb
+        aarch64-linux-gnu-strip LinuxBuildArm64/TypedocConverter
+    - name: Upload Linux ARM64 native artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Linux_ARM64
+        path: LinuxBuildArm64
+
   publish-macos:
     runs-on: macos-latest
     needs: build
