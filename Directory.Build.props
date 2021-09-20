@@ -4,7 +4,6 @@
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-    <IlcDisableReflection>true</IlcDisableReflection>
     <IlcTrimMetadata>true</IlcTrimMetadata>
   </PropertyGroup>
   <ItemGroup Condition="'$(NativeBuild)'=='true'">
