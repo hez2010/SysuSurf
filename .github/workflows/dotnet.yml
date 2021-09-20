@@ -103,7 +103,23 @@ jobs:
       with:
         name: Linux_Musl_Arm64
         path: LinuxBuildMuslArm64
-        
+  
+  publish-linux-musl-x64:
+    runs-on: ubuntu-latest
+    needs: build
+    container: mcr.microsoft.com/dotnet/sdk:6.0-alpine
+
+    - name: Publish Linux ARM64 Release
+      run: |
+        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
+        rm LinuxBuildMuslx64/*.pdb
+        strip LinuxBuildMuslx64/SysuSurf
+    - name: Upload Linux Musl x64 artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: Linux_Muslx64
+        path: LinuxBuildMuslx64
+
   publish-linux-arm64:
     runs-on: ubuntu-latest
     needs: build
