@@ -82,17 +82,6 @@ jobs:
       with:
         name: Linux_x64
         path: LinuxBuildx64
-    - name: Publish Linux Musl x64 Release
-      run: |
-        sudo apt install -y musl
-        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
-        rm LinuxBuildMuslx64/*.pdb
-        strip LinuxBuildMuslx64/SysuSurf
-    - name: Upload Linux Musl x64 artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: Linux_Muslx64
-        path: LinuxBuildMuslx64
     - name: Publish Linux musl Arm64 Release
       run: |
         dotnet publish -c Release -r linux-musl-arm64 -o LinuxBuildMuslArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
