@@ -45,7 +45,8 @@ namespace SysuSurf
             var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
             if (device is null)
             {
-                throw new FileNotFoundException($"Network device '{options.DeviceName}' doesn't exist. \nAvailable interfaces: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}");
+                var deviceMessage = devices.Count > 0 ? $"Available devices: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}" : "No available network devices.";
+                throw new FileNotFoundException($"Network device '{options.DeviceName}' doesn't exist. \n{deviceMessage}");
             }
 
             this.device = device;

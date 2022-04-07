@@ -1,13 +1,16 @@
-﻿// Licensed to hez2010 under one or more agreements.
+// Licensed to hez2010 under one or more agreements.
 // hez2010 licenses this file to you under the MIT license.
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SharpPcap.LibPcap;
 using SysuSurf.Eap;
 using SysuSurf.Options;
 using static SysuSurf.Utils.AssertHelpers;
@@ -16,7 +19,7 @@ namespace SysuSurf
 {
     class Program
     {
-        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate) 
+        static TOption LoadOptionalOption<TOption>(JsonElement element, string propertyName, Predicate<int> validate)
             where TOption : struct, Enum
         {
             if (element.TryGetProperty(propertyName, out var property) &&
@@ -74,8 +77,11 @@ namespace SysuSurf
 
         static IHostBuilder CreateHostBuilder(string[] args, SurfOptions options) =>
             Host.CreateDefaultBuilder(args)
+#if WINDOWS
                 .UseWindowsService()
+#elif LINUX
                 .UseSystemd()
+#endif
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(options);
@@ -90,17 +96,58 @@ namespace SysuSurf
                     }
                 });
 
-        static async Task Main(string[] args)
+
+        static void PrintUsage(bool invalid = false)
+        {
+            if (invalid)
+            {
+                Console.WriteLine("Invalid arguments.");
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("Usage: SysuSurf [command] [options...]");
+            Console.WriteLine("Commands:");
+            Console.WriteLine("  ls");
+            Console.WriteLine("      List all available network devices.");
+            Console.WriteLine("  auth [config.json file]");
+            Console.WriteLine("      Authenticate network with specified config.");
+            Console.WriteLine("  help");
+            Console.WriteLine("      Show help message.");
+            Console.WriteLine("  version");
+            Console.WriteLine("      Show SysuSurf version.");
+        }
+
+        static async Task<int> Main(string[] args)
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("Usage: SysuSurf [options_file] [...args]");
-                return;
+                PrintUsage(false);
+                return 1;
             }
 
-            var options = await LoadOptions(args[0]);
-
-            await CreateHostBuilder(args[1..], options).Build().RunAsync();
+            switch (args[0])
+            {
+                case "ls":
+                    var devices = LibPcapLiveDeviceList.Instance;
+                    Console.WriteLine(devices.Count > 0 ? $"Available devices: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}" : "No available network devices.");
+                    break;
+                case "auth":
+                    if (args.Length < 2)
+                    {
+                        PrintUsage(true);
+                        var options = await LoadOptions(args[1]);
+                        await CreateHostBuilder(args[1..], options).Build().RunAsync();
+                        return 1;
+                    }
+                    break;
+                case "help":
+                    PrintUsage(false);
+                    break;
+                case "version":
+                    Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Version);
+                    break;
+            }
+            return 0;
         }
     }
 }

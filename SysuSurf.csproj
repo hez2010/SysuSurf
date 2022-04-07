@@ -7,12 +7,17 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TrimMode>Link</TrimMode>
     <NativeBuild>true</NativeBuild>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <HostingExtension>Microsoft.Extensions.Hosting</HostingExtension>
+    <HostingExtension Condition="$(RuntimeIdentifier.StartsWith('win'))">Microsoft.Extensions.Hosting.WindowsServices</HostingExtension>
+    <HostingExtension Condition="$(RuntimeIdentifier.StartsWith('linux'))">Microsoft.Extensions.Hosting.Systemd</HostingExtension>
+    <DefineConstants Condition="$(RuntimeIdentifier.StartsWith('win'))">$(DefineConstants);WINDOWS</DefineConstants>
+    <DefineConstants Condition="$(RuntimeIdentifier.StartsWith('linux'))">$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="6.0.0-preview.5.21301.5" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0-preview.5.21301.5" />
-    <PackageReference Include="SharpPcap" Version="6.0.0" />
+    <PackageReference Include="$(HostingExtension)" Version="6.0.0" />
+    <PackageReference Include="SharpPcap" Version="6.1.0" />
   </ItemGroup>
 
 </Project>
