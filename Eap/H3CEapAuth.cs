@@ -191,7 +191,7 @@ namespace SysuSurf.Eap
                                 lastRequest = DateTime.Now;
                                 break;
                             case EapCode.LoginMessage when id == 5 && buffer.Length >= 12:
-                                logger.LogInformation("Got Message: " + Encoding.Default.GetString(buffer[12..]));
+                                logger.LogInformation($"Got Message: {Encoding.Default.GetString(buffer[12..])}.");
                                 break;
                             default:
                                 break;

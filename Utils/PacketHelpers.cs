@@ -24,7 +24,6 @@ namespace SysuSurf.Utils
             Memory<byte> buffer = new byte[4 + payload.Length];
             buffer.Span[0] = 1;
             buffer.Span[1] = (byte)code;
-            var lengthBuffer = BitConverter.GetBytes((ushort)payload.Length);
             BinaryPrimitives.WriteUInt16BigEndian(buffer.Span[2..], (ushort)payload.Length);
             payload.CopyTo(buffer[4..]);
             return buffer;
