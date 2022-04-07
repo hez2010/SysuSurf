@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -99,56 +100,69 @@ namespace SysuSurf
 
         static void PrintUsage(bool invalid = false)
         {
+            var help = new StringBuilder();
+            help.AppendLine("Usage: SysuSurf [command] [options...]");
+            help.AppendLine("Commands:");
+            help.AppendLine("  ls");
+            help.AppendLine("      List all available network devices.");
+            help.AppendLine("  auth [config.json file]");
+            help.AppendLine("      Authenticate network with specified config.");
+            help.AppendLine("  help");
+            help.AppendLine("      Show help message.");
+            help.AppendLine("  version");
+            help.AppendLine("      Show SysuSurf version.");
+
             if (invalid)
             {
-                Console.WriteLine("Invalid arguments.");
-                Console.WriteLine();
+                throw new InvalidOperationException($"Invalid arguments.\n{help}");
             }
-
-            Console.WriteLine("Usage: SysuSurf [command] [options...]");
-            Console.WriteLine("Commands:");
-            Console.WriteLine("  ls");
-            Console.WriteLine("      List all available network devices.");
-            Console.WriteLine("  auth [config.json file]");
-            Console.WriteLine("      Authenticate network with specified config.");
-            Console.WriteLine("  help");
-            Console.WriteLine("      Show help message.");
-            Console.WriteLine("  version");
-            Console.WriteLine("      Show SysuSurf version.");
+            else
+            {
+                Console.WriteLine(help);
+            }
         }
 
         static async Task<int> Main(string[] args)
         {
-            if (args.Length < 1)
+            try
             {
-                PrintUsage(false);
-                return 1;
-            }
-
-            switch (args[0])
-            {
-                case "ls":
-                    var devices = LibPcapLiveDeviceList.Instance;
-                    Console.WriteLine(devices.Count > 0 ? $"Available devices: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}" : "No available network devices.");
-                    break;
-                case "auth":
-                    if (args.Length < 2)
-                    {
-                        PrintUsage(true);
-                        var options = await LoadOptions(args[1]);
-                        await CreateHostBuilder(args[1..], options).Build().RunAsync();
-                        return 1;
-                    }
-                    break;
-                case "help":
-                    PrintUsage(false);
-                    break;
-                case "version":
-                    Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Version);
-                    break;
-                default:
+                if (args.Length < 1)
+                {
                     PrintUsage(true);
-                    return 1;
+                }
+
+                switch (args[0])
+                {
+                    case "ls":
+                        var devices = LibPcapLiveDeviceList.Instance;
+                        Console.WriteLine(devices.Count > 0 ? $"Available devices: \nDevice Name (Device Description) \n{devices.Select(i => $"{i.Name} ({i.Description})").Aggregate((a, n) => $"{a}\n{n}")}" : "No available network devices.");
+                        break;
+                    case "auth":
+                        if (args.Length < 2)
+                        {
+                            PrintUsage(true);
+                        }
+                        else
+                        {
+                            var options = await LoadOptions(args[1]);
+                            await CreateHostBuilder(args[2..], options).Build().RunAsync();
+                        }
+                        break;
+                    case "help":
+                        PrintUsage(false);
+                        break;
+                    case "version":
+                        Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Version);
+                        break;
+                    default:
+                        PrintUsage(true);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                return -1;
             }
             return 0;
         }
