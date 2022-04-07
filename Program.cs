@@ -146,6 +146,9 @@ namespace SysuSurf
                 case "version":
                     Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Version);
                     break;
+                default:
+                    PrintUsage(true);
+                    return 1;
             }
             return 0;
         }
