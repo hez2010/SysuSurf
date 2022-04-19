@@ -5,6 +5,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
     <IlcTrimMetadata>true</IlcTrimMetadata>
+    <TrimmerDefaultAction>Link</TrimmerDefaultAction>
   </PropertyGroup>
   <ItemGroup Condition="'$(NativeBuild)'=='true'">
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
