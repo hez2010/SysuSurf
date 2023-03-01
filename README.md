@@ -39,7 +39,7 @@ sc delete SysuSurf
 ## Development Guide
 ### Prerequsities
 - pcap (libpcap, NPcap, WinPcap and etc.)
-- .NET 6 SDK
+- .NET 8 SDK
 
 ### Build
 ```bash
