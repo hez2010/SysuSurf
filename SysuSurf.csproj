@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TrimMode>Link</TrimMode>
-    <NativeBuild>true</NativeBuild>
+    <TrimMode>full</TrimMode>
+    <PublishAot>true</PublishAot>
     <AssemblyVersion>1.4.0.0</AssemblyVersion>
     <HostingExtension>Microsoft.Extensions.Hosting</HostingExtension>
     <HostingExtension Condition="$(RuntimeIdentifier.StartsWith('win'))">Microsoft.Extensions.Hosting.WindowsServices</HostingExtension>
@@ -15,9 +15,34 @@
     <DefineConstants Condition="$(RuntimeIdentifier.StartsWith('linux'))">$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <EventSourceSupport>false</EventSourceSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <IlcInstructionSet>avx2,bmi2,fma,pclmul,popcnt,aes</IlcInstructionSet>
+    <StripSymbols>true</StripSymbols>
+    <StaticExecutable>true</StaticExecutable>
+    <StaticIcuLinking>true</StaticIcuLinking>
+    <StaticOpenSslLinking>true</StaticOpenSslLinking>
+    <StaticNumaLinking>true</StaticNumaLinking>
+    <DebuggerSupport>false</DebuggerSupport>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="$(HostingExtension)" Version="6.0.0" />
-    <PackageReference Include="SharpPcap" Version="6.1.0" />
+    <PackageReference Include="$(HostingExtension)" Version="8.0.0-preview.1.23110.8" />
+    <PackageReference Include="SharpPcap" Version="6.2.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\sharppcap\SharpPcap\SharpPcap.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
+    <DirectPInvoke Include="pcap" />
+    <DirectPInvoke Include="libc" />
+    <NativeLibrary Include="/usr/lib/libpcap.a" />
+  </ItemGroup>
 </Project>
