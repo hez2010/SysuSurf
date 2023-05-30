@@ -1,5 +1,5 @@
 # SysuSurf
-Cross-platform Implementation for SYSU H3C and Ruijie Authentication.
+Cross-platform Implementation for SYSU H3C and Ruijie (WIP) Authentication.
 
 ## Prerequsities
 - pcap (libpcap, NPcap, WinPcap and etc.)
