@@ -62,7 +62,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Publish Linux x64 Release
       run: |
-        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils build-base zlib-static
+        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils build-base zlib-static flex bison
         chmod +x ./build_libpcap_amd64.sh
         ./build_libpcap_amd64.sh
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-x64 -o LinuxBuildx64 /p:PublishAot=true /p:LibPcapSearchPath=./libpcap-1.10.4
@@ -86,9 +86,10 @@ jobs:
         dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
     - name: Publish Native Linux ARM64 Release
       run: |
+        apt install flex bison
         chmod +x ./build_libpcap_aarch64.sh
         ./build_libpcap_aarch64.sh
-        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64 /p:LibPcapSearchPath=./libpcap-1.10.4
         rm LinuxBuildArm64/*.pdb
     - name: Upload Linux ARM64 native artifact
       uses: actions/upload-artifact@v1.0.0
