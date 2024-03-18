@@ -22,12 +22,15 @@
     <EventSourceSupport>false</EventSourceSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <StripSymbols>true</StripSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+    <LibPcapSearchPath>/usr/local/lib</LibPcapSearchPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
     <StaticExecutable>true</StaticExecutable>
     <StaticIcuLinking>true</StaticIcuLinking>
     <StaticOpenSslLinking>true</StaticOpenSslLinking>
     <StaticNumaLinking>true</StaticNumaLinking>
-    <DebuggerSupport>false</DebuggerSupport>
-    <LibPcapSearchPath>/usr/local/lib</LibPcapSearchPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -60,10 +60,10 @@ jobs:
     - uses: actions/checkout@v2
     - name: Publish Linux x64 Release
       run: |
-        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils libc-dev build-base zlib-static flex bison build-essential
+        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils libc-dev build-base zlib-static flex bison
         chmod +x ./build_libpcap_amd64.sh
         ./build_libpcap_amd64.sh
-        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-x64 -o LinuxBuildx64 /p:PublishAot=true /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-x64 -o LinuxBuildx64 /p:PublishAot=true /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4
         rm LinuxBuildx64/*.pdb
     - name: Upload Linux x64 artifact
       uses: actions/upload-artifact@v1.0.0
@@ -87,7 +87,7 @@ jobs:
         apt install flex bison
         chmod +x ./build_libpcap_aarch64.sh
         ./build_libpcap_aarch64.sh
-        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64 /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64 /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4 /p:LinkerFlavor=lld
         rm LinuxBuildArm64/*.pdb
     - name: Upload Linux ARM64 artifact
       uses: actions/upload-artifact@v1.0.0
