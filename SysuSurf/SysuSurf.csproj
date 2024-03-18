@@ -27,6 +27,7 @@
     <StaticOpenSslLinking>true</StaticOpenSslLinking>
     <StaticNumaLinking>true</StaticNumaLinking>
     <DebuggerSupport>false</DebuggerSupport>
+    <LibPcapSearchPath>/usr/local/lib</LibPcapSearchPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +41,7 @@
   <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
     <DirectPInvoke Include="pcap" />
     <DirectPInvoke Include="libc" />
-    <NativeLibrary Include="libpcap.a" />
+    <NativeLibrary Include="$(LibPcapSearchPath)/libpcap.a" />
   </ItemGroup>
 
   <ItemGroup>
