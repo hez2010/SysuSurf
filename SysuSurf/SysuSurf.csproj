@@ -31,6 +31,7 @@
     <StaticIcuLinking>true</StaticIcuLinking>
     <StaticOpenSslLinking>true</StaticOpenSslLinking>
     <StaticNumaLinking>true</StaticNumaLinking>
+    <LinkStandardCPlusPlusLibrary>true</LinkStandardCPlusPlusLibrary>
   </PropertyGroup>
 
   <ItemGroup>
