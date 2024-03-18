@@ -54,4 +54,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="CrossBuildCrypto" BeforeTargets="LinkNative" Condition="'$(_PatchOpenSslStaticLinkingOnArm64Ci)' == 'true'">
+    <Exec Command="cp $(ProjectDir)libSystem.Security.Cryptography.Native.OpenSsl.a $(ProjectDir)$(IntermediateOutputPath)libs/System.Security.Cryptography.Native/build/" />
+  </Target>
+
 </Project>

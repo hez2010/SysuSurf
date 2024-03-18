@@ -42,7 +42,7 @@ jobs:
         path: WindowsBuildx64
     - name: Publish Windows Arm64 Release
       run: |
-        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r win-arm64 -o WindowsBuildArm64 /p:PublishAot=true /p:CrossCompileWindowsArm64=true
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r win-arm64 -o WindowsBuildArm64 /p:PublishAot=true
         del WindowsBuildArm64\*.pdb
     - name: Upload Windows Arm64 artifact
       uses: actions/upload-artifact@v1.0.0
@@ -64,7 +64,7 @@ jobs:
         chmod +x ./build_libpcap_amd64.sh
         ./build_libpcap_amd64.sh
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-x64 -o LinuxBuildx64 /p:PublishAot=true /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4
-        rm LinuxBuildx64/*.pdb LinuxBuildx64/*.dbg
+        rm -f LinuxBuildx64/*.pdb LinuxBuildx64/*.dbg
     - name: Upload Linux x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -87,8 +87,8 @@ jobs:
         apt install flex bison
         chmod +x ./build_libpcap_aarch64.sh
         ./build_libpcap_aarch64.sh
-        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64 /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4 /p:LinkerFlavor=lld
-        rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.dbg
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64 /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4 /p:LinkerFlavor=lld /p:ObjCopyName=$(pwd)/aarch64-linux-musl-cross/bin/aarch64-linux-musl-objcopy /p:_PatchOpenSslStaticLinkingOnArm64Ci=true
+        rm -f LinuxBuildArm64/*.pdb LinuxBuildArm64/*.dbg
     - name: Upload Linux ARM64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
