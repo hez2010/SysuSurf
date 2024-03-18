@@ -60,7 +60,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Publish Linux x64 Release
       run: |
-        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils libc-dev build-base zlib-static flex bison alpine-sdk
+        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils libc-dev build-base zlib-static flex bison alpine-sdk linux-headers xz
         chmod +x ./build_libpcap_amd64.sh
         ./build_libpcap_amd64.sh
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-x64 -o LinuxBuildx64 /p:PublishAot=true /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4
