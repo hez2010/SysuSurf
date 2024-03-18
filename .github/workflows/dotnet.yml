@@ -47,7 +47,7 @@ jobs:
     - name: Upload Windows Arm64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
-        name: Windows_Arm64
+        name: Windows_ARM64
         path: WindowsBuildArm64
 
   publish-linux-x64:
@@ -64,7 +64,7 @@ jobs:
         chmod +x ./build_libpcap_amd64.sh
         ./build_libpcap_amd64.sh
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-x64 -o LinuxBuildx64 /p:PublishAot=true /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4
-        rm LinuxBuildx64/*.pdb
+        rm LinuxBuildx64/*.pdb LinuxBuildx64/*.dbg
     - name: Upload Linux x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -88,7 +88,7 @@ jobs:
         chmod +x ./build_libpcap_aarch64.sh
         ./build_libpcap_aarch64.sh
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-musl-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CppCompilerAndLinker=clang-17 /p:SysRoot=/crossrootfs/arm64 /p:LibPcapSearchPath=$(pwd)/libpcap-1.10.4 /p:LinkerFlavor=lld
-        rm LinuxBuildArm64/*.pdb
+        rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.dbg
     - name: Upload Linux ARM64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -108,6 +108,7 @@ jobs:
     - name: Publish macOS ARM64 Release
       run: |
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r osx-arm64 -o macOSBuildArm64 /p:PublishAot=true
+        rm -rf macOSBuildArm64/SysuSurf.dsym
         rm -f macOSBuildArm64/*.pdb
     - name: Upload macOS ARM64 artifact
       uses: actions/upload-artifact@v1.0.0
