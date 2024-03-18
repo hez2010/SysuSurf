@@ -37,10 +37,16 @@
     <ProjectReference Include="..\SharpPcap\SharpPcap.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="!$(RuntimeIdentifier.StartsWith('win'))">
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
     <DirectPInvoke Include="pcap" />
     <DirectPInvoke Include="libc" />
-    <NativeLibrary Include="/usr/lib/libpcap.a" />
+    <NativeLibrary Include="libpcap.a" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

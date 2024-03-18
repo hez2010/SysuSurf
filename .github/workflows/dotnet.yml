@@ -46,8 +46,6 @@ jobs:
       run: |
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r win-arm64 -o WindowsBuildArm64 /p:PublishAot=true /p:CrossCompileWindowsArm64=true
         del WindowsBuildArm64\*.pdb
-        del WindowsBuildArm64\*.json
-        copy config.json WindowsBuildArm64\config.json
     - name: Upload Windows Arm64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -64,10 +62,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Publish Linux x64 Release
       run: |
-        apk --no-cache add clang clang-dev musl-dev git gcc krb5-dev zlib-dev libexecinfo lldb binutils build-base zlib-static
+        apk --no-cache add clang openssl-dev libpcap-dev cmake krb5-dev zlib-dev binutils build-base zlib-static
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-x64 -o LinuxBuildx64 /p:PublishAot=true
-        rm LinuxBuildx64/*.pdb LinuxBuildx64/*.json
-        cp config.json LinuxBuildx64/config.json
+        rm LinuxBuildx64/*.pdb
     - name: Upload Linux x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -87,10 +84,8 @@ jobs:
         dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
     - name: Publish Native Linux ARM64 Release
       run: |
-        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-14 /p:SysRoot=/crossrootfs/arm64
-        rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
-        aarch64-linux-gnu-strip LinuxBuildArm64/SysuSurf
-        cp config.json LinuxBuildArm64/config.json
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang /p:SysRoot=/crossrootfs/arm64
+        rm LinuxBuildArm64/*.pdb
     - name: Upload Linux ARM64 native artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -110,9 +105,7 @@ jobs:
     - name: Publish macOS x64 Release
       run: |
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r osx-x64 -o macOSBuildx64
-        rm -f macOSBuildx64/*.pdb macOSBuildx64/*.json
-        strip macOSBuildx64/SysuSurf
-        cp config.json macOSBuildx64/config.json
+        rm -f macOSBuildx64/*.pdb
     - name: Upload macOS x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
