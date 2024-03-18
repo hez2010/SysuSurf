@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,8 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TrimMode>full</TrimMode>
-    <PublishAot>true</PublishAot>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
     <HostingExtension>Microsoft.Extensions.Hosting</HostingExtension>
     <HostingExtension Condition="$(RuntimeIdentifier.StartsWith('win'))">Microsoft.Extensions.Hosting.WindowsServices</HostingExtension>
     <HostingExtension Condition="$(RuntimeIdentifier.StartsWith('linux'))">Microsoft.Extensions.Hosting.Systemd</HostingExtension>
@@ -16,13 +15,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
     <InvariantGlobalization>true</InvariantGlobalization>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
     <EventSourceSupport>false</EventSourceSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
-    <IlcInstructionSet>avx2,bmi2,fma,pclmul,popcnt,aes</IlcInstructionSet>
     <StripSymbols>true</StripSymbols>
     <StaticExecutable>true</StaticExecutable>
     <StaticIcuLinking>true</StaticIcuLinking>
@@ -32,17 +30,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="$(HostingExtension)" Version="8.0.0-preview.1.23110.8" />
-    <PackageReference Include="SharpPcap" Version="6.2.5" />
+    <PackageReference Include="$(HostingExtension)" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sharppcap\SharpPcap\SharpPcap.csproj" />
+    <ProjectReference Include="..\SharpPcap\SharpPcap.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux'))">
+  <ItemGroup Condition="!$(RuntimeIdentifier.StartsWith('win'))">
     <DirectPInvoke Include="pcap" />
     <DirectPInvoke Include="libc" />
     <NativeLibrary Include="/usr/lib/libpcap.a" />
   </ItemGroup>
+
 </Project>

@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 env:
-  DOTNET_SDK_VERSION: '6.0.x'
+  DOTNET_SDK_VERSION: '8.0.x'
 
 jobs:
   build:
@@ -18,7 +18,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-        include-prerelease: true
     - name: Build
       run: dotnet build
 
@@ -32,10 +31,9 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-        include-prerelease: true
     - name: Publish Windows x64 Release
       run: |
-        dotnet publish -c Release -r win-x64 -o WindowsBuildx64 /p:NativeBuild=true
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r win-x64 -o WindowsBuildx64 /p:PublishAot=true
         del WindowsBuildx64\*.pdb
         del WindowsBuildx64\*.json
         copy config.json WindowsBuildx64\config.json
@@ -46,7 +44,7 @@ jobs:
         path: WindowsBuildx64
     - name: Publish Windows Arm64 Release
       run: |
-        dotnet publish -c Release -r win-arm64 -o WindowsBuildArm64 /p:NativeBuild=true /p:CrossCompileWindowsArm64=true
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r win-arm64 -o WindowsBuildArm64 /p:PublishAot=true /p:CrossCompileWindowsArm64=true
         del WindowsBuildArm64\*.pdb
         del WindowsBuildArm64\*.json
         copy config.json WindowsBuildArm64\config.json
@@ -56,68 +54,30 @@ jobs:
         name: Windows_Arm64
         path: WindowsBuildArm64
 
-  publish-other-linux:
+  publish-linux-x64:
     runs-on: ubuntu-latest
     needs: build
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:8.0-alpine
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-        include-prerelease: true
-    - name: Install Kerberos 5 library
-      run: |
-        sudo apt update
-        sudo apt install -y libkrb5-dev
     - name: Publish Linux x64 Release
       run: |
-        dotnet publish -c Release -r linux-x64 -o LinuxBuildx64 /p:NativeBuild=true
-        rm -f LinuxBuildx64/*.pdb LinuxBuildx64/*.json
-        strip LinuxBuildx64/SysuSurf
+        apk --no-cache add clang clang-dev musl-dev git gcc krb5-dev zlib-dev libexecinfo lldb binutils build-base zlib-static
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-x64 -o LinuxBuildx64 /p:PublishAot=true
+        rm LinuxBuildx64/*.pdb LinuxBuildx64/*.json
         cp config.json LinuxBuildx64/config.json
     - name: Upload Linux x64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         name: Linux_x64
         path: LinuxBuildx64
-    - name: Publish Linux musl Arm64 Release
-      run: |
-        dotnet publish -c Release -r linux-musl-arm64 -o LinuxBuildMuslArm64 /p:NativeBuild=false /p:PublishSingleFile=true /p:PublishTrimmed=true
-        rm -f LinuxBuildMuslArm64/*.pdb LinuxBuildMuslArm64/*.json
-        cp config.json LinuxBuildMuslArm64/config.json
-    - name: Upload Linux musl Arm64 artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: Linux_Musl_Arm64
-        path: LinuxBuildMuslArm64
-  
-  publish-linux-musl-x64:
-    runs-on: ubuntu-latest
-    needs: build
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:6.0-alpine
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Publish Linux Musl x64 Release
-      run: |
-        apk --no-cache add clang clang-dev musl-dev git gcc krb5-dev zlib-dev libexecinfo lldb binutils build-base zlib-static
-        dotnet publish -c Release -r linux-musl-x64 -o LinuxBuildMuslx64 /p:NativeBuild=true
-        rm LinuxBuildMuslx64/*.pdb LinuxBuildMuslx64/*.json
-        strip LinuxBuildMuslx64/SysuSurf
-        cp config.json LinuxBuildMuslx64/config.json
-    - name: Upload Linux Musl x64 artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: Linux_Musl_x64
-        path: LinuxBuildMuslx64
 
   publish-linux-arm64:
     runs-on: ubuntu-latest
     needs: build
-    container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-16.04-cross-arm64-20201022204150-b2c2436
+    container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-22.04-cross-arm64-alpine
 
     steps:
     - uses: actions/checkout@v2
@@ -125,10 +85,9 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-        include-prerelease: true
     - name: Publish Native Linux ARM64 Release
       run: |
-        dotnet publish -c Release -r linux-arm64 -o LinuxBuildArm64 /p:NativeBuild=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-9 /p:SysRoot=/crossrootfs/arm64
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r linux-arm64 -o LinuxBuildArm64 /p:PublishAot=true /p:CrossCompileLinuxArm64=true /p:CppCompilerAndLinker=clang-14 /p:SysRoot=/crossrootfs/arm64
         rm LinuxBuildArm64/*.pdb LinuxBuildArm64/*.json
         aarch64-linux-gnu-strip LinuxBuildArm64/SysuSurf
         cp config.json LinuxBuildArm64/config.json
@@ -148,10 +107,9 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-        include-prerelease: true
     - name: Publish macOS x64 Release
       run: |
-        dotnet publish -c Release -r osx-x64 -o macOSBuildx64
+        dotnet publish SysuSurf/SysuSurf.csproj -c Release -r osx-x64 -o macOSBuildx64
         rm -f macOSBuildx64/*.pdb macOSBuildx64/*.json
         strip macOSBuildx64/SysuSurf
         cp config.json macOSBuildx64/config.json
