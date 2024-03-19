@@ -31,6 +31,7 @@ namespace SysuSurf
         protected readonly ILiveDevice device;
         protected bool disposed = false;
         protected bool hasLogOff = false;
+        protected DateTime lastRequest;
 
         protected readonly ReadOnlyMemory<byte> ethernetHeader;
         protected readonly CancellationTokenSource cancellationTokenSource;
@@ -60,6 +61,18 @@ namespace SysuSurf
             cancellationTokenSource = new();
 
             this.ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), PaeGroupAddr, 0x888e).ToArray();
+        }
+
+        protected void SendResponse(byte id, EapMethod type, ReadOnlySpan<byte> data = default)
+        {
+            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.Packet, PacketHelpers.GetEapPacket(EapCode.Response, id, type, data))]);
+        }
+
+        protected void SendStartRequest()
+        {
+            logger.LogInformation("Send EAPOL Start Request.");
+            lastRequest = DateTime.Now;
+            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.Start)]);
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)

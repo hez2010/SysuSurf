@@ -11,7 +11,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SharpPcap;
 using SysuSurf.Options;
-using SysuSurf.Utils;
 using static SysuSurf.Utils.AssertHelpers;
 
 namespace SysuSurf.Eap
@@ -22,18 +21,12 @@ namespace SysuSurf.Eap
         private readonly ReadOnlyMemory<byte> userName;
         private readonly ReadOnlyMemory<byte> password;
         private readonly ReadOnlyMemory<byte> paddedPassword;
-        private DateTime lastRequest;
 
         public H3CEapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<H3CEapAuth> logger) : base(options, lifetime, logger)
         {
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
             paddedPassword = (byte[])[.. password.Span, .. Enumerable.Repeat<byte>(0, 16 - password.Length)];
-        }
-
-        private void SendResponse(byte id, EapMethod type, ReadOnlySpan<byte> data = default)
-        {
-            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.Packet, PacketHelpers.GetEapPacket(EapCode.Response, id, type, data))]);
         }
 
         private void SendIdResponse(byte id)
@@ -67,13 +60,6 @@ namespace SysuSurf.Eap
                 digest = MD5.HashData([id, .. password.Span, .. md5Data]);
             }
             SendResponse(id, EapMethod.Md5, [(byte)digest.Length, .. digest, .. userName.Span]);
-        }
-
-        private void SendStartRequest()
-        {
-            logger.LogInformation("Send EAPOL Start Request.");
-            lastRequest = DateTime.Now;
-            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.Start)]);
         }
 
         protected override void EapWorker(EapWorkerState state)

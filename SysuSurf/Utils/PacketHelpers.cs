@@ -7,9 +7,9 @@ using SysuSurf.Eap;
 
 namespace SysuSurf.Utils
 {
-    public static class PacketHelpers
+    internal static class PacketHelpers
     {
-        public static ReadOnlySpan<byte> GetEthernetHeader(ReadOnlySpan<byte> src, ReadOnlySpan<byte> dst, ushort type)
+        internal static ReadOnlySpan<byte> GetEthernetHeader(ReadOnlySpan<byte> src, ReadOnlySpan<byte> dst, ushort type)
         {
             Span<byte> buffer = new byte[src.Length + dst.Length + sizeof(ushort)];
             dst.CopyTo(buffer);
@@ -18,7 +18,7 @@ namespace SysuSurf.Utils
             return buffer;
         }
 
-        public static ReadOnlySpan<byte> GetEapolPacket(EapolCode code, ReadOnlySpan<byte> payload = default)
+        internal static ReadOnlySpan<byte> GetEapolPacket(EapolCode code, ReadOnlySpan<byte> payload = default)
         {
             Span<byte> buffer = new byte[4 + payload.Length];
             buffer[0] = 1;
@@ -28,7 +28,7 @@ namespace SysuSurf.Utils
             return buffer;
         }
 
-        public static ReadOnlySpan<byte> GetEapPacket(EapCode code, byte id, EapMethod type, ReadOnlySpan<byte> data = default)
+        internal static ReadOnlySpan<byte> GetEapPacket(EapCode code, byte id, EapMethod type, ReadOnlySpan<byte> data = default)
         {
             switch (code)
             {

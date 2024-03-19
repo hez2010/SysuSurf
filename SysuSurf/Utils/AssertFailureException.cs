@@ -5,8 +5,8 @@ using System;
 
 namespace SysuSurf.Utils
 {
-    public class AssertFailureException : Exception
+    internal class AssertFailureException : Exception
     {
-        public AssertFailureException(string? message) : base(message) { }
+        internal AssertFailureException(string? message) : base(message) { }
     }
 }

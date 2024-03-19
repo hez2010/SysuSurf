@@ -22,6 +22,7 @@ namespace SysuSurf.Eap
 
         protected override void EapWorker(EapWorkerState state)
         {
+            SendStartRequest();
             throw new NotImplementedException();
         }
     }
