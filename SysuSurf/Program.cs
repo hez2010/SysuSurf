@@ -24,11 +24,17 @@ namespace SysuSurf
             where TOption : struct, Enum
         {
             if (element.TryGetProperty(propertyName, out var property) &&
-                property.TryGetInt32(out var value) &&
-                validate(value))
+                property.TryGetInt32(out var value))
             {
                 Assert(Unsafe.SizeOf<TOption>() == sizeof(int));
-                return Unsafe.As<int, TOption>(ref value);
+                if (validate(value))
+                {
+                    return Unsafe.As<int, TOption>(ref value);
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(propertyName);
+                }
             }
 
             return default;

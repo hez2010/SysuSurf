@@ -40,11 +40,11 @@ jobs:
       with:
         name: Windows_x64
         path: WindowsBuildx64
-    - name: Publish Windows Arm64 Release
+    - name: Publish Windows ARM64 Release
       run: |
         dotnet publish SysuSurf/SysuSurf.csproj -c Release -r win-arm64 -o WindowsBuildArm64 /p:PublishAot=true
         del WindowsBuildArm64\*.pdb
-    - name: Upload Windows Arm64 artifact
+    - name: Upload Windows ARM64 artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         name: Windows_ARM64

@@ -10,7 +10,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SharpPcap;
 using SharpPcap.LibPcap;
+using SysuSurf.Eap;
 using SysuSurf.Options;
+using SysuSurf.Utils;
 
 namespace SysuSurf
 {
@@ -28,7 +30,12 @@ namespace SysuSurf
         protected readonly ILogger<TAuth> logger;
         protected readonly ILiveDevice device;
         protected bool disposed = false;
+        protected bool hasLogOff = false;
+
+        protected readonly ReadOnlyMemory<byte> ethernetHeader;
         protected readonly CancellationTokenSource cancellationTokenSource;
+
+        private static ReadOnlySpan<byte> PaeGroupAddr => [0x01, 0x80, 0xc2, 0x00, 0x00, 0x03];
 
         public EapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<TAuth> logger)
         {
@@ -36,11 +43,11 @@ namespace SysuSurf
             {
                 throw new InvalidOperationException("Invalid Options.");
             }
-            
+
             this.options = tOptions;
             this.lifetime = lifetime;
             this.logger = logger;
-            
+
             var devices = LibPcapLiveDeviceList.Instance;
             var device = devices.FirstOrDefault(i => i.Name == options.DeviceName);
             if (device is null)
@@ -51,7 +58,33 @@ namespace SysuSurf
 
             this.device = device;
             cancellationTokenSource = new();
+
+            this.ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), PaeGroupAddr, 0x888e).ToArray();
         }
+
+        public override Task StartAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
+            device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
+            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(cancellationTokenSource.Token), false);
+
+            return Task.CompletedTask;
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            logger.LogInformation("Send EAPOL LogOff Request.");
+            hasLogOff = true;
+            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.LogOff)]);
+            cancellationTokenSource.Cancel();
+            return Task.CompletedTask;
+        }
+
+        protected abstract void EapWorker(EapWorkerState state);
 
         ~EapAuth()
         {

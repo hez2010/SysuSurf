@@ -7,7 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SharpPcap;
 using SysuSurf.Options;
+using SysuSurf.Utils;
 
 namespace SysuSurf.Eap
 {
@@ -18,12 +20,7 @@ namespace SysuSurf.Eap
             throw new NotImplementedException("Ruijie authentication is not yet implemented.");
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
+        protected override void EapWorker(EapWorkerState state)
         {
             throw new NotImplementedException();
         }

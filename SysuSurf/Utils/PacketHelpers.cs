@@ -3,33 +3,32 @@
 
 using System;
 using System.Buffers.Binary;
-using System.Linq;
 using SysuSurf.Eap;
 
 namespace SysuSurf.Utils
 {
     public static class PacketHelpers
     {
-        public static ReadOnlyMemory<byte> GetEthernetHeader(ReadOnlyMemory<byte> src, ReadOnlyMemory<byte> dst, ushort type)
+        public static ReadOnlySpan<byte> GetEthernetHeader(ReadOnlySpan<byte> src, ReadOnlySpan<byte> dst, ushort type)
         {
-            Memory<byte> buffer = new byte[src.Length + dst.Length + sizeof(ushort)];
+            Span<byte> buffer = new byte[src.Length + dst.Length + sizeof(ushort)];
             dst.CopyTo(buffer);
             src.CopyTo(buffer[dst.Length..]);
-            BinaryPrimitives.WriteUInt16BigEndian(buffer.Span[(src.Length + dst.Length)..], type);
+            BinaryPrimitives.WriteUInt16BigEndian(buffer[(src.Length + dst.Length)..], type);
             return buffer;
         }
 
-        public static ReadOnlyMemory<byte> GetEapolPacket(EapolCode code, ReadOnlyMemory<byte> payload = default)
+        public static ReadOnlySpan<byte> GetEapolPacket(EapolCode code, ReadOnlySpan<byte> payload = default)
         {
-            Memory<byte> buffer = new byte[4 + payload.Length];
-            buffer.Span[0] = 1;
-            buffer.Span[1] = (byte)code;
-            BinaryPrimitives.WriteUInt16BigEndian(buffer.Span[2..], (ushort)payload.Length);
+            Span<byte> buffer = new byte[4 + payload.Length];
+            buffer[0] = 1;
+            buffer[1] = (byte)code;
+            BinaryPrimitives.WriteUInt16BigEndian(buffer[2..], (ushort)payload.Length);
             payload.CopyTo(buffer[4..]);
             return buffer;
         }
 
-        public static ReadOnlyMemory<byte> GetEapPacket(EapCode code, byte id, EapMethod type, ReadOnlyMemory<byte> data = default)
+        public static ReadOnlySpan<byte> GetEapPacket(EapCode code, byte id, EapMethod type, ReadOnlySpan<byte> data = default)
         {
             switch (code)
             {
@@ -42,23 +41,15 @@ namespace SysuSurf.Utils
                     }
                 default:
                     {
-                        Memory<byte> buffer = new byte[5 + data.Length];
-                        buffer.Span[0] = (byte)code;
-                        buffer.Span[1] = id;
-                        BinaryPrimitives.WriteUInt16BigEndian(buffer.Span[2..], (ushort)(5 + data.Length));
-                        buffer.Span[4] = (byte)type;
+                        Span<byte> buffer = new byte[5 + data.Length];
+                        buffer[0] = (byte)code;
+                        buffer[1] = id;
+                        BinaryPrimitives.WriteUInt16BigEndian(buffer[2..], (ushort)(5 + data.Length));
+                        buffer[4] = (byte)type;
                         data.CopyTo(buffer[5..]);
                         return buffer;
                     }
             }
-        }
-
-        public static ReadOnlyMemory<byte> Concat(this ReadOnlyMemory<byte> buffer, ReadOnlyMemory<byte> other)
-        {
-            Memory<byte> result = new byte[buffer.Length + other.Length];
-            buffer.CopyTo(result);
-            other.CopyTo(result[buffer.Length..]);
-            return result;
         }
     }
 }

@@ -5,9 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace SysuSurf.Utils
 {
-    public static class AssertHelpers
+    internal static class AssertHelpers
     {
-        public static void Assert(bool value, [CallerFilePath] string? filePath = default, [CallerMemberName] string? memberName = default, [CallerLineNumber] int lineNumber = default, [CallerArgumentExpression("value")] string? expression = default)
+        internal static void Assert(bool value, [CallerFilePath] string? filePath = default, [CallerMemberName] string? memberName = default, [CallerLineNumber] int lineNumber = default, [CallerArgumentExpression("value")] string? expression = default)
         {
 #if DEBUG
             if (!value) throw new AssertFailureException($"{filePath}:{lineNumber}: {expression} ({memberName})");

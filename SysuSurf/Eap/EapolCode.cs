@@ -5,6 +5,6 @@ namespace SysuSurf.Eap
 {
     public enum EapolCode : byte
     {
-        Packet, Start, LogOff, Key, Asf
+        Packet, Start, LogOff, Key, Asf, RjPropKeepAlive = 0xbf
     }
 }

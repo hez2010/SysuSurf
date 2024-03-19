@@ -7,7 +7,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SharpPcap;
@@ -19,100 +18,72 @@ namespace SysuSurf.Eap
 {
     public sealed class H3CEapAuth : EapAuth<H3CEapAuth, H3COptions>
     {
-        private readonly static ReadOnlyMemory<byte> paeGroupAddr = new byte[] { 0x01, 0x80, 0xc2, 0x00, 0x00, 0x03 };
-        private readonly static ReadOnlyMemory<byte> versionInfo = new byte[] { 0x06, 0x07, }.Concat(Encoding.ASCII.GetBytes("bjQ7SE8BZ3MqHhs3clMregcDY3Y=")).Concat(new byte[] { 0x20, 0x20 }).ToArray();
-        private readonly ReadOnlyMemory<byte> ethernetHeader;
+        private readonly static ReadOnlyMemory<byte> versionInfo = (byte[])[0x06, 0x07, .. Encoding.ASCII.GetBytes("bjQ7SE8BZ3MqHhs3clMregcDY3Y="), 0x20, 0x20];
         private readonly ReadOnlyMemory<byte> userName;
         private readonly ReadOnlyMemory<byte> password;
         private readonly ReadOnlyMemory<byte> paddedPassword;
         private DateTime lastRequest;
-        private bool hasLogOff = false;
 
         public H3CEapAuth(SurfOptions options, IHostLifetime lifetime, ILogger<H3CEapAuth> logger) : base(options, lifetime, logger)
         {
-            ethernetHeader = PacketHelpers.GetEthernetHeader(device.MacAddress.GetAddressBytes(), paeGroupAddr, 0x888e);
             userName = Encoding.ASCII.GetBytes(options.UserName);
             password = Encoding.ASCII.GetBytes(options.Password.Length > 16 ? options.Password[0..16] : options.Password);
-            paddedPassword = password.ToArray().Concat(Enumerable.Repeat<byte>(0, 16 - password.Length)).ToArray();
+            paddedPassword = (byte[])[.. password.Span, .. Enumerable.Repeat<byte>(0, 16 - password.Length)];
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        private void SendResponse(byte id, EapMethod type, ReadOnlySpan<byte> data = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            device.Open(DeviceModes.NoCaptureLocal | DeviceModes.NoCaptureRemote);
-            device.Filter = "not (tcp or udp or arp or rarp or ip or ip6)";
-            ThreadPool.UnsafeQueueUserWorkItem(EapWorker, new EapWorkerState(cancellationTokenSource.Token), false);
-
-            return Task.CompletedTask;
-        }
-
-        private void SendResponse(byte id, EapMethod type, ReadOnlyMemory<byte> data = default)
-        {
-            device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.Packet, PacketHelpers.GetEapPacket(EapCode.Response, id, type, data))).Span);
+            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.Packet, PacketHelpers.GetEapPacket(EapCode.Response, id, type, data))]);
         }
 
         private void SendIdResponse(byte id)
         {
             logger.LogInformation("Send Id Response.");
-            SendResponse(id, EapMethod.Identity, versionInfo.Concat(userName));
+            SendResponse(id, EapMethod.Identity, [.. versionInfo.Span, .. userName.Span]);
         }
 
         private void SendH3cResponse(byte id)
         {
             logger.LogInformation("Send H3C Response.");
-            SendResponse(id, EapMethod.SysuH3C, new ReadOnlyMemory<byte>(new byte[] { (byte)password.Length }).Concat(password).Concat(userName));
+            SendResponse(id, EapMethod.SysuH3C, [(byte)password.Length, .. password.Span, .. userName.Span]);
         }
 
-        private void SendMd5Response(byte id, ReadOnlyMemory<byte> md5Data)
+        private void SendMd5Response(byte id, ReadOnlySpan<byte> md5Data)
         {
             Assert(md5Data.Length == 16);
             logger.LogInformation("Send MD5-Challenge Response.");
-            byte[] digest;
+            Span<byte> digest;
 
             if (options.Md5Method == H3CMd5ChallengeMethod.Xor)
             {
                 digest = new byte[16];
                 for (var i = 0; i < 16; i++)
                 {
-                    digest[i] = (byte)(paddedPassword.Span[i] ^ md5Data.Span[i]);
+                    digest[i] = (byte)(paddedPassword.Span[i] ^ md5Data[i]);
                 }
             }
             else
             {
-                var data = new ReadOnlyMemory<byte>(new[] { id }).Concat(password).Concat(md5Data);
-                digest = MD5.HashData(data.ToArray());
+                digest = MD5.HashData([id, .. password.Span, .. md5Data]);
             }
-            var response = new ReadOnlyMemory<byte>(new[] { (byte)digest.Length }).Concat(digest).Concat(userName);
-            SendResponse(id, EapMethod.Md5, response);
+            SendResponse(id, EapMethod.Md5, [(byte)digest.Length, .. digest, .. userName.Span]);
         }
 
         private void SendStartRequest()
         {
             logger.LogInformation("Send EAPOL Start Request.");
             lastRequest = DateTime.Now;
-            device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.Start)).Span);
+            device.SendPacket([.. ethernetHeader.Span, .. PacketHelpers.GetEapolPacket(EapolCode.Start)]);
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            logger.LogInformation("Send EAPOL LogOff Request.");
-            hasLogOff = true;
-            device.SendPacket(ethernetHeader.Concat(PacketHelpers.GetEapolPacket(EapolCode.LogOff)).Span);
-            cancellationTokenSource.Cancel();
-            return Task.CompletedTask;
-        }
-
-        private void EapWorker(EapWorkerState state)
+        protected override void EapWorker(EapWorkerState state)
         {
             SendStartRequest();
             while (!state.CancellationToken.IsCancellationRequested)
             {
                 if (device.GetNextPacket(out var packet) == GetPacketStatus.PacketRead)
                 {
-                    var buffer = packet.Data.ToArray().AsSpan();
+                    var buffer = packet.Data;
                     if (buffer.Length < 14 + 8) continue;
                     buffer = buffer[14..];
                     var (_, type, _) = (buffer[0], (EapolCode)buffer[1], BinaryPrimitives.ReadInt16BigEndian(buffer[2..4]));
@@ -157,14 +128,14 @@ namespace SysuSurf.Eap
 
                                 var reqType = (EapMethod)buffer[8];
 
-                                byte[] data;
+                                ReadOnlySpan<byte> data;
                                 if (buffer.Length <= 8 || 4 + eapLen <= 9)
                                 {
-                                    data = Array.Empty<byte>();
+                                    data = [];
                                 }
                                 else
                                 {
-                                    data = buffer[9..Math.Min(buffer.Length, 4 + eapLen)].ToArray();
+                                    data = buffer[9..Math.Min(buffer.Length, 4 + eapLen)];
                                 }
 
                                 switch (reqType)
